@@ -2,6 +2,8 @@ package org.senthilvsh.saffron;
 
 import org.senthilvsh.saffron.ast.Program;
 import org.senthilvsh.saffron.common.SaffronException;
+import org.senthilvsh.saffron.parser.ParseError;
+import org.senthilvsh.saffron.parser.ParseResult;
 import org.senthilvsh.saffron.parser.Parser;
 import org.senthilvsh.saffron.runtime.Interpreter;
 import org.senthilvsh.saffron.validate.Validator;
@@ -39,9 +41,14 @@ public class Main {
         Validator validator = new Validator();
         Interpreter interpreter = new Interpreter();
         try {
-            Program program = parser.program();
-            // TODO: Print all parsing errors from the ParseResult
+            ParseResult result = parser.parse();
+            for (ParseError e : result.getErrors()) {
+                printError(e.getMessage(), source, e.getPosition(), e.getLength());
+            }
+            Program program = result.getProgram();
+            // TODO: Do not validate if there are parse errors
             validator.validate(program);
+            // TODO: Do not run program if there are parse or validation errors
             interpreter.execute(program);
         } catch (SaffronException e) {
             printError(e.getMessage(), source, e.getPosition(), e.getLength());
@@ -50,7 +57,7 @@ public class Main {
 
     private static void printError(String message, String source, int position, int length) {
         // TODO: Print line number
-        System.err.println(message + "\n");
+        System.err.println("Error: " + message + "\n");
         LineInfo lineInfo = getLine(source, position);
         if (lineInfo != null) {
             System.err.println(lineInfo.line);

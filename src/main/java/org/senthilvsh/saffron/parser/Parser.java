@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Parser {
-
+    private final List<ParseError> errors = new ArrayList<>();
     private final List<Token> tokens = new ArrayList<>();
     private int tokenIdx = 0;
     private Token lookahead;
@@ -27,18 +27,23 @@ public class Parser {
         }
     }
 
-    // TODO: Return a ParserResult which includes a list of errors along with the program
-
-    public Program program() throws ParserException {
+    public ParseResult parse() throws ParseError {
         List<Statement> statements = new ArrayList<>();
         while (lookahead != null) {
-            statements.add(statement());
+            try {
+                statements.add(statement());
+            } catch (ParseError e) {
+                errors.add(e);
+                while (!lookahead.getValue().equals(";")) {
+                    consume();
+                }
+                consume(TokenType.SYMBOL, new String[]{";"});
+            }
         }
-        return new Program(statements);
+        return new ParseResult(new Program(statements), errors);
     }
 
-    // TODO: In case of error during parsing, create an error statement and continue parsing from the next statement
-    Statement statement() throws ParserException {
+    Statement statement() throws ParseError {
         assertLookAheadNotNull();
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("var")) {
@@ -64,11 +69,11 @@ public class Parser {
         }
     }
 
-    Expression expression() throws ParserException {
+    Expression expression() throws ParseError {
         return assignmentExpression();
     }
 
-    Expression assignmentExpression() throws ParserException {
+    Expression assignmentExpression() throws ParseError {
         assertLookAheadNotNull();
 
         Expression left = equalityExpression();
@@ -90,7 +95,7 @@ public class Parser {
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
-    Expression equalityExpression() throws ParserException {
+    Expression equalityExpression() throws ParseError {
         Expression left = relationalExpression();
 
         if (lookahead == null || !isEqualityOperator(lookahead.getValue())) {
@@ -113,7 +118,7 @@ public class Parser {
         return "==".equals(operator) || "!=".equals(operator);
     }
 
-    Expression relationalExpression() throws ParserException {
+    Expression relationalExpression() throws ParseError {
         Expression left = additiveExpression();
 
         if (lookahead == null || !isRelationalOperator(lookahead.getValue())) {
@@ -139,7 +144,7 @@ public class Parser {
                 "<=".equals(operator);
     }
 
-    Expression additiveExpression() throws ParserException {
+    Expression additiveExpression() throws ParseError {
         Expression left = multiplicativeExpression();
 
         if (lookahead == null || !isAdditiveOperator(lookahead.getValue())) {
@@ -162,7 +167,7 @@ public class Parser {
         return "+".equals(operator) || "-".equals(operator);
     }
 
-    Expression multiplicativeExpression() throws ParserException {
+    Expression multiplicativeExpression() throws ParseError {
         Expression left = primaryExpression();
 
         if (lookahead == null || !isMultiplicativeOperator(lookahead.getValue())) {
@@ -185,7 +190,7 @@ public class Parser {
         return "*".equals(operator) || "/".equals(operator) || "%".equals(operator);
     }
 
-    Expression primaryExpression() throws ParserException {
+    Expression primaryExpression() throws ParseError {
         assertLookAheadNotNull();
 
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("(")) {
@@ -216,14 +221,24 @@ public class Parser {
             return new BooleanLiteral(Boolean.parseBoolean(token.getValue()), token.getPosition(), token.getLength());
         }
 
-        throw new ParserException("Expected a Number, String or Boolean literal", lookahead.getPosition(), lookahead.getLength());
+        throw new ParseError("Expected a Number, String or Boolean literal", lookahead.getPosition(), lookahead.getLength());
     }
 
-    Token consume(TokenType type) throws ParserException {
+    void consume() throws ParseError {
+        assertLookAheadNotNull();
+        tokenIdx++;
+        if (tokenIdx >= tokens.size()) {
+            lookahead = null;
+        } else {
+            lookahead = tokens.get(tokenIdx);
+        }
+    }
+
+    Token consume(TokenType type) throws ParseError {
         assertLookAheadNotNull();
 
         if (lookahead.getType() != type) {
-            throw new ParserException("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
+            throw new ParseError("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
         }
 
         Token token = lookahead;
@@ -236,16 +251,16 @@ public class Parser {
         return token;
     }
 
-    Token consume(TokenType type, String[] values) throws ParserException {
+    Token consume(TokenType type, String[] values) throws ParseError {
         if (lookahead == null) {
             Token last = tokens.get(tokens.size() - 1);
-            throw new ParserException(String.format("Expected one of %s",
+            throw new ParseError(String.format("Expected one of %s",
                     Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     last.getPosition(), last.getLength());
         }
 
         if (lookahead.getType() != type) {
-            throw new ParserException(String.format("Expected one of %s",
+            throw new ParseError(String.format("Expected one of %s",
                     Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     lookahead.getPosition(), lookahead.getLength());
         }
@@ -259,7 +274,7 @@ public class Parser {
         }
         if (!found) {
             // TODO: Better error message when only one item is in values array
-            throw new ParserException(String.format("Expected one of %s",
+            throw new ParseError(String.format("Expected one of %s",
                     Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     lookahead.getPosition(), lookahead.getLength());
         }
@@ -274,10 +289,10 @@ public class Parser {
         return token;
     }
 
-    void assertLookAheadNotNull() throws ParserException {
+    void assertLookAheadNotNull() throws ParseError {
         if (lookahead == null) {
             Token last = tokens.get(tokens.size() - 1);
-            throw new ParserException("End of file reached unexpectedly", last.getPosition(), last.getLength());
+            throw new ParseError("End of file reached unexpectedly", last.getPosition(), last.getLength());
         }
     }
 }
