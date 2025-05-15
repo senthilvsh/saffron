@@ -45,7 +45,12 @@ public class Interpreter {
                 throw new InterpreterException(String.format("Undefined variable '%s'", i.getName()),
                         i.getPosition(), i.getLength());
             }
-            return variables.get(i.getName()).getValue();
+            Variable variable = variables.get(i.getName());
+            if (variable.getValue() == null) {
+                throw new InterpreterException(String.format("Variable '%s' is used before being assigned", i.getName()),
+                        i.getPosition(), i.getLength());
+            }
+            return variable.getValue();
         }
         if (expression instanceof BinaryExpression binaryExpression) {
             String operator = binaryExpression.getOperator();

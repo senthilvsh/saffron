@@ -2,12 +2,14 @@ package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.common.Type;
+import org.senthilvsh.saffron.runtime.InterpreterException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Validator {
     private final Map<String, Type> variableTypes = new HashMap<>();
+    private final Map<String, Boolean> variableAssignmentStatus = new HashMap<>();
 
     public void validate(Program program) throws ValidatorException {
         for (Statement s : program.getStatements()) {
@@ -42,12 +44,21 @@ public class Validator {
                 throw new ValidatorException(String.format("Undeclared variable '%s'", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
+            if (!variableAssignmentStatus.containsKey(identifier.getName())) {
+                throw new ValidatorException(String.format("Variable '%s' is used before being assigned", identifier.getName()),
+                        identifier.getPosition(), identifier.getLength());
+            }
             return variableTypes.get(identifier.getName());
         }
         if (expression instanceof BinaryExpression binaryExpression) {
+            String operator = binaryExpression.getOperator();
+
+            if ("=".equals(operator)) {
+                return assign(binaryExpression);
+            }
+
             Type left = getType(binaryExpression.getLeft());
             Type right = getType(binaryExpression.getRight());
-            String operator = binaryExpression.getOperator();
             try {
                 if ("+".equals(operator)) {
                     return add(left, right);
@@ -81,9 +92,6 @@ public class Validator {
                 }
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
-                }
-                if ("=".equals(operator)) {
-                    return assign(left, right);
                 }
             } catch (RuntimeException ex) {
                 throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
@@ -181,10 +189,19 @@ public class Validator {
         throw new RuntimeException();
     }
 
-    Type assign(Type left, Type right) {
-        if (left == right) {
-            return left;
+    Type assign(BinaryExpression binaryExpression) throws ValidatorException {
+        if (!(binaryExpression.getLeft() instanceof Identifier identifier)) {
+            throw new ValidatorException("Left side of assignment must be a variable",
+                    binaryExpression.getLeft().getPosition(), binaryExpression.getLeft().getLength());
         }
-        throw new RuntimeException();
+        Type variableType = variableTypes.get(identifier.getName());
+        Type right = getType(binaryExpression.getRight());
+        if (variableType == right) {
+            variableAssignmentStatus.put(identifier.getName(), true);
+            return right;
+        }
+        throw new ValidatorException(String.format("Cannot assign value of type '%s' to variable of type '%s'",
+                right.getName(), variableType.getName()),
+                binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
     }
 }
