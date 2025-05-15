@@ -42,6 +42,18 @@ public class Validator {
                 if ("%".equals(operator)) {
                     return modulo(left, right);
                 }
+                if (">".equals(operator)) {
+                    return greaterThan(left, right);
+                }
+                if (">=".equals(operator)) {
+                    return greaterThanOrEqual(left, right);
+                }
+                if ("<".equals(operator)) {
+                    return lessThan(left, right);
+                }
+                if ("<=".equals(operator)) {
+                    return lessThanOrEqual(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -82,6 +94,34 @@ public class Validator {
     }
 
     Type modulo(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type greaterThan(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type greaterThanOrEqual(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type lessThan(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type lessThanOrEqual(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
             return Type.NUMBER;
         }

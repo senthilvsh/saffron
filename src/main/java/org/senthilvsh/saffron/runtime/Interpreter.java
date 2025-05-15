@@ -42,6 +42,19 @@ public class Interpreter {
                 if ("%".equals(operator)) {
                     return modulo(left, right);
                 }
+                if (">".equals(operator)) {
+                    return greaterThan(left, right);
+                }
+                if (">=".equals(operator)) {
+                    return greaterThanOrEqual(left, right);
+                }
+                if ("<".equals(operator)) {
+                    return lessThan(left, right);
+                }
+                if ("<=".equals(operator)) {
+                    return lessThanOrEqual(left, right);
+                }
+
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
                         left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -86,6 +99,34 @@ public class Interpreter {
     BaseObj modulo(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() % ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj greaterThan(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new BooleanObj(((NumberObj) left).getValue() > ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj greaterThanOrEqual(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new BooleanObj(((NumberObj) left).getValue() >= ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj lessThan(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new BooleanObj(((NumberObj) left).getValue() < ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj lessThanOrEqual(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new BooleanObj(((NumberObj) left).getValue() <= ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }

@@ -39,11 +39,41 @@ public class Parser {
 
     Statement statement() throws ParserException {
         // TODO: In case of invalid token or mismatch, create error statement and continue parsing from the next statement
-        Expression expression = additiveExpression();
+        Expression expression = expression();
 
         Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
 
         return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
+    }
+
+    Expression expression() throws ParserException {
+        return relationalExpression();
+    }
+
+    Expression relationalExpression() throws ParserException {
+        Expression left = additiveExpression();
+
+        if (lookahead == null || !isRelationalOperator(lookahead.getValue())) {
+            return left;
+        }
+
+        Token operator = consume(TokenType.OPERATOR, new String[]{">=", "<=", ">", "<"});
+
+        assertLookAheadNotNull();
+
+        Expression right = relationalExpression();
+
+        int position = left.getPosition();
+        int length = (right.getPosition() + right.getLength()) - left.getPosition();
+
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    private boolean isRelationalOperator(String operator) {
+        return ">".equals(operator) ||
+                "<".equals(operator) ||
+                ">=".equals(operator) ||
+                "<=".equals(operator);
     }
 
     Expression additiveExpression() throws ParserException {
@@ -86,6 +116,13 @@ public class Parser {
 
     Expression primaryExpression() throws ParserException {
         assertLookAheadNotNull();
+
+        if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("(")) {
+            Token open = consume(TokenType.SYMBOL, new String[]{"("});
+            Expression expression = expression();
+            Token close = consume(TokenType.SYMBOL, new String[]{")"});
+            return expression;
+        }
 
         if (lookahead.getType() == TokenType.NUMBER) {
             Token token = consume(TokenType.NUMBER);
