@@ -11,6 +11,10 @@ public class Parser {
         lookahead = lexer.next();
     }
 
+    public Program program() throws ParserException {
+        return new Program(additiveExpression());
+    }
+
     Expression additiveExpression() throws ParserException {
         Expression left = primaryExpression();
 

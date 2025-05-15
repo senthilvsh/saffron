@@ -17,21 +17,43 @@ public class Interpreter {
             BaseObj left = evaluate(binaryExpression.getLeft());
             BaseObj right = evaluate(binaryExpression.getRight());
             String operator = binaryExpression.getOperator();
-            if ("+".equals(operator) || "-".equals(operator)) {
-                if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-                    return new NumberObj(((NumberObj) left).getValue() + ((NumberObj) right).getValue());
+            try {
+                if ("+".equals(operator)) {
+                    return add(left, right);
                 }
-                if (left.getType() == Type.STRING || right.getType() == Type.STRING) {
-                    String leftStr = stringValue(left);
-                    String rightStr = stringValue(right);
-                    return new StringObj(leftStr + rightStr);
+                if ("-".equals(operator)) {
+                    return subtract(left, right);
                 }
-                // TODO: Report the position of operator only. It makes sense here.
-                throw new InterpreterException(String.format("Cannot perform '%s' operation between %s and %s",
-                        operator, left.getType().getName(), right.getType().getName()), binaryExpression.getPosition(), binaryExpression.getLength());
+            } catch (RuntimeException ex) {
+                throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
+                        left.getType().getName(), right.getType().getName()), binaryExpression.getPosition(), binaryExpression.getLength());
             }
         }
         throw new InterpreterException("Unknown expression type", expression.getPosition(), expression.getLength());
+    }
+
+    BaseObj add(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new NumberObj(((NumberObj) left).getValue() + ((NumberObj) right).getValue());
+        }
+        if (left.getType() == Type.STRING || right.getType() == Type.STRING) {
+            String leftStr = stringValue(left);
+            String rightStr = stringValue(right);
+            return new StringObj(leftStr + rightStr);
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj subtract(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new NumberObj(((NumberObj) left).getValue() - ((NumberObj) right).getValue());
+        }
+        if (left.getType() == Type.STRING || right.getType() == Type.STRING) {
+            String leftStr = stringValue(left);
+            String rightStr = stringValue(right);
+            return new StringObj(leftStr + rightStr);
+        }
+        throw new RuntimeException();
     }
 
     private String stringValue(BaseObj obj) {

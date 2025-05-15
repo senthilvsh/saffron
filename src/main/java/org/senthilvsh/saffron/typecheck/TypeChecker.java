@@ -18,18 +18,36 @@ public class TypeChecker {
             Type left = getType(binaryExpression.getLeft());
             Type right = getType(binaryExpression.getRight());
             String operator = binaryExpression.getOperator();
-            if ("+".equals(operator) || "-".equals(operator)) {
-                if (left == Type.NUMBER && right == Type.NUMBER) {
-                    return Type.NUMBER;
+            try {
+                if ("+".equals(operator)) {
+                    return add(left, right);
                 }
-                if (left == Type.STRING || right == Type.STRING) {
-                    return Type.STRING;
+                if ("-".equals(operator)) {
+                    return subtract(left, right);
+
                 }
-                // TODO: Report the position of operator only. It makes sense here.
+            } catch (RuntimeException ex) {
                 throw new TypeCheckerException(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getPosition(), binaryExpression.getLength());
             }
         }
         throw new TypeCheckerException("Unknown expression type", expression.getPosition(), expression.getLength());
+    }
+
+    Type add(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        if (left == Type.STRING || right == Type.STRING) {
+            return Type.STRING;
+        }
+        throw new RuntimeException();
+    }
+
+    Type subtract(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
     }
 }
