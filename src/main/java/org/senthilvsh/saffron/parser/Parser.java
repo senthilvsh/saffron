@@ -2,6 +2,9 @@ package org.senthilvsh.saffron.parser;
 
 import org.senthilvsh.saffron.ast.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Parser {
     private final Lexer lexer;
     private Token lookahead;
@@ -9,16 +12,32 @@ public class Parser {
     public Parser(String source) {
         lexer = new Lexer(source);
         lookahead = lexer.next();
+        // TODO: Get all tokens at once into a list and start parsing. This will help with error position at EOF
     }
 
+    // TODO: Return a ParserResult which includes a list of errors along with the program
+
     public Program program() throws ParserException {
-        return new Program(additiveExpression());
+        List<Statement> statements = new ArrayList<>();
+        while (lookahead != null) {
+            statements.add(statement());
+        }
+        return new Program(statements);
+    }
+
+    Statement statement() throws ParserException {
+        // TODO: In case of invalid token or mismatch, create error statement and continue parsing from the next statement
+        Expression expression = additiveExpression();
+
+        Token semicolon = consume(TokenType.SYMBOL, ";");
+
+        return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
     }
 
     Expression additiveExpression() throws ParserException {
         Expression left = primaryExpression();
 
-        if (lookahead == null) {
+        if (lookahead == null || !(lookahead.getValue().equals("+") || lookahead.getValue().equals("-"))) {
             return left;
         }
 
@@ -65,11 +84,33 @@ public class Parser {
 
     Token consume(TokenType type) throws ParserException {
         if (lookahead == null) {
-            throw new ParserException("Reached end of stream unexpectedly");
+            throw new ParserException("Reached end of file unexpectedly");
         }
+
+        // TODO: In case of invalid token, throw specific exception
 
         if (lookahead.getType() != type) {
             throw new ParserException("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
+        }
+
+        Token token = lookahead;
+        lookahead = lexer.next();
+        return token;
+    }
+
+    Token consume(TokenType type, String value) throws ParserException {
+        if (lookahead == null) {
+            throw new ParserException(String.format("Expected a '%s' but reached end of file", value));
+        }
+
+        // TODO: In case of invalid token, throw specific exception
+
+        if (lookahead.getType() != type) {
+            throw new ParserException("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
+        }
+
+        if (!lookahead.getValue().equals(value)) {
+            throw new ParserException(String.format("Expected a '%s'", value), lookahead.getPosition(), lookahead.getLength());
         }
 
         Token token = lookahead;

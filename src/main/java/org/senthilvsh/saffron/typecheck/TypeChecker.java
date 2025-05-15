@@ -4,6 +4,14 @@ import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.runtime.Type;
 
 public class TypeChecker {
+    public void check(Program program) throws TypeCheckerException {
+        for (Statement s : program.getStatements()) {
+            if (s instanceof ExpressionStatement es) {
+                getType(es.getExpression());
+            }
+        }
+    }
+
     public Type getType(Expression expression) throws TypeCheckerException {
         if (expression instanceof NumberLiteral) {
             return Type.NUMBER;

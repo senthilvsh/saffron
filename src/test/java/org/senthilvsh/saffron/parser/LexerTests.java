@@ -60,7 +60,7 @@ public class LexerTests {
     public void testUnknown() {
         Lexer lexer = new Lexer("  $  ");
         Token token = lexer.next();
-        Assertions.assertEquals(TokenType.UNKNOWN, token.getType());
+        Assertions.assertEquals(TokenType.INVALID, token.getType());
         Assertions.assertEquals("$", token.getValue());
         Assertions.assertEquals(2, token.getPosition());
         Assertions.assertEquals(1, token.getLength());

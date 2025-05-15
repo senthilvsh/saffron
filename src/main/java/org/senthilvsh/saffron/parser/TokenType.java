@@ -5,5 +5,6 @@ public enum TokenType {
     STRING,
     BOOLEAN,
     OPERATOR,
-    UNKNOWN
+    SYMBOL,
+    INVALID
 }

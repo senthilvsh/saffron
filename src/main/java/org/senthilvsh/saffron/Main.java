@@ -39,35 +39,32 @@ public class Main {
         try {
             program = parser.program();
         } catch (ParserException e) {
-            System.err.println("Error while parsing program");
+            System.err.println(e.getMessage());
             System.out.println(source.substring(e.getPosition(), e.getPosition() + e.getLength()));
             return;
         }
 
         TypeChecker typeChecker = new TypeChecker();
         try {
-            typeChecker.getType(program.getExpression());
+            typeChecker.check(program);
         } catch (TypeCheckerException e) {
             System.err.println(e.getMessage());
             System.err.println(getLine(source, e.getPosition()));
-            System.err.println(squggly(e.getPosition(), e.getLength()));
+            System.err.println(squiggly(e.getPosition(), e.getLength()));
             System.err.println();
             return;
         }
 
         Interpreter interpreter = new Interpreter();
         try {
-            BaseObj result = interpreter.evaluate(program.getExpression());
-            if (result instanceof NumberObj numberObj) {
-                System.out.println(numberObj.getValue());
-            }
+            interpreter.execute(program);
         } catch (InterpreterException e) {
             System.err.println("Error while executing program");
             e.printStackTrace(System.err);
         }
     }
 
-    private static String squggly(int position, int length) {
+    private static String squiggly(int position, int length) {
         String str = "";
         for (int i = 0; i < position; i++) {
             str += " ";

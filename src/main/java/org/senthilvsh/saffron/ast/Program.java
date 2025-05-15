@@ -1,13 +1,15 @@
 package org.senthilvsh.saffron.ast;
 
-public class Program {
-    private final Expression expression;
+import java.util.List;
 
-    public Program(Expression expression) {
-        this.expression = expression;
+public class Program {
+    private final List<Statement> statements;
+
+    public Program(List<Statement> statements) {
+        this.statements = statements;
     }
 
-    public Expression getExpression() {
-        return expression;
+    public List<Statement> getStatements() {
+        return statements;
     }
 }

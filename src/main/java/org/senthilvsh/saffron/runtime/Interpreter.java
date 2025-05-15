@@ -3,6 +3,15 @@ package org.senthilvsh.saffron.runtime;
 import org.senthilvsh.saffron.ast.*;
 
 public class Interpreter {
+    public void execute(Program program) throws InterpreterException {
+        for (Statement s : program.getStatements()) {
+            if (s instanceof ExpressionStatement es) {
+                BaseObj result = evaluate(es.getExpression());
+                System.out.println(stringValue(result));
+            }
+        }
+    }
+
     public BaseObj evaluate(Expression expression) throws InterpreterException {
         if (expression instanceof NumberLiteral n) {
             return new NumberObj(n.getValue());

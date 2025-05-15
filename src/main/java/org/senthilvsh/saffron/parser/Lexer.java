@@ -9,6 +9,7 @@ public class Lexer {
     private static final Pattern STRING_PATTERN = Pattern.compile("((\")([^\"]*)(\"))([\\s\\S]*)");
     private static final Pattern BOOLEAN_PATTERN = Pattern.compile("(true|false)([\\s\\S]*)");
     private static final Pattern OPERATOR_PATTERN = Pattern.compile("([+\\-])([\\s\\S]*)");
+    private static final Pattern SYMBOL_PATTERN = Pattern.compile("(;)([\\s\\S]*)");
 
     private final String source;
 
@@ -65,8 +66,16 @@ public class Lexer {
             return token;
         }
 
+        m = SYMBOL_PATTERN.matcher(source.substring(position));
+        if (m.matches()) {
+            String match = m.group(1);
+            Token token = new Token(TokenType.SYMBOL, match, position);
+            position += match.length();
+            return token;
+        }
+
         String value = String.valueOf(source.charAt(position));
-        Token token = new Token(TokenType.UNKNOWN, value, position);
+        Token token = new Token(TokenType.INVALID, value, position);
         position++;
         return token;
     }
