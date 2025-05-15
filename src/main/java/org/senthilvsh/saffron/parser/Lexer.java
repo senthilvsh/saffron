@@ -11,7 +11,7 @@ public class Lexer {
     private static final Pattern OPERATOR_PATTERN = Pattern.compile("(>=|<=|>|<|==|!=|=|\\+|-|\\*|/|%)([\\s\\S]*)");
     private static final Pattern SYMBOL_PATTERN = Pattern.compile("([();:])([\\s\\S]*)");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("(([_a-zA-Z]+)([_a-zA-Z0-9]*))([\\s\\S]*)");
-    private static final Pattern KEYWORD_PATTERN = Pattern.compile("(var|num|str|bool)([\\s\\S]*)");
+    private static final Pattern KEYWORD_PATTERN = Pattern.compile("(var|num|str|bool|print)([\\s\\S]*)");
 
     private final String source;
 

@@ -1,3 +1,0 @@
-@ECHO OFF
-
-java -jar target\saffron-1.0-SNAPSHOT.jar %~1

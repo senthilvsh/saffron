@@ -17,7 +17,9 @@ public class Interpreter {
 
     private void execute(Statement statement) throws InterpreterException {
         if (statement instanceof ExpressionStatement es) {
-            BaseObj result = evaluate(es.getExpression());
+            evaluate(es.getExpression());
+        } else if (statement instanceof PrintStatement ps) {
+            BaseObj result = evaluate(ps.getExpression());
             System.out.println(stringValue(result));
         } else if (statement instanceof VariableDeclarationStatement vds) {
             String name = vds.getName();

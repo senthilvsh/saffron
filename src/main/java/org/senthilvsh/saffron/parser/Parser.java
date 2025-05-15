@@ -49,10 +49,18 @@ public class Parser {
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
             return new VariableDeclarationStatement(variableName.getValue(), typeSpecifier.getValue(),
                     varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
+        }
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("print")) {
+            Token printKeyword = consume(TokenType.KEYWORD, new String[]{"print"});
+            Expression expression = expression();
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new PrintStatement(expression, printKeyword.getPosition(),
+                    semicolon.getPosition() + semicolon.getLength() - printKeyword.getPosition());
         } else {
             Expression expression = expression();
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
+            return new ExpressionStatement(expression, expression.getPosition(),
+                    semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
         }
     }
 
