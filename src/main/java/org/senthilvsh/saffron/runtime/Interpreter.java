@@ -1,14 +1,30 @@
 package org.senthilvsh.saffron.runtime;
 
 import org.senthilvsh.saffron.ast.*;
+import org.senthilvsh.saffron.common.Type;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Interpreter {
+    private final Map<String, BaseObj> variables = new HashMap<>();
+
     public void execute(Program program) throws InterpreterException {
         for (Statement s : program.getStatements()) {
-            if (s instanceof ExpressionStatement es) {
-                BaseObj result = evaluate(es.getExpression());
-                System.out.println(stringValue(result));
+            execute(s);
+        }
+    }
+
+    private void execute(Statement statement) throws InterpreterException {
+        if (statement instanceof ExpressionStatement es) {
+            BaseObj result = evaluate(es.getExpression());
+            System.out.println(stringValue(result));
+        } else if (statement instanceof VariableDeclarationStatement vds) {
+            String name = vds.getName();
+            if (variables.containsKey(name)) {
+                throw new InterpreterException(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
+            variables.put(name, new BaseObj(Type.of(vds.getType())));
         }
     }
 
@@ -22,7 +38,12 @@ public class Interpreter {
         if (expression instanceof BooleanLiteral b) {
             return new BooleanObj(b.getValue());
         }
+        if (expression instanceof Identifier i) {
+            // TODO: This logic is for reading variable
+            return null;
+        }
         if (expression instanceof BinaryExpression binaryExpression) {
+            // TODO: Check for assignment expression here
             BaseObj left = evaluate(binaryExpression.getLeft());
             BaseObj right = evaluate(binaryExpression.getRight());
             String operator = binaryExpression.getOperator();
@@ -59,6 +80,9 @@ public class Interpreter {
                 }
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
+                }
+                if ("=".equals(operator)) {
+                    return assign(binaryExpression.getLeft(), right);
                 }
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
@@ -168,6 +192,37 @@ public class Interpreter {
         }
         // Types of left and right are different
         throw new RuntimeException();
+    }
+
+    BaseObj assign(Expression left, BaseObj right) throws InterpreterException {
+        if (!(left instanceof Identifier identifier)) {
+            throw new InterpreterException("Left side of assignment must be a variable", left.getPosition(), left.getLength());
+        }
+
+        if (!variables.containsKey(identifier.getName())) {
+            throw new InterpreterException(String.format("Undeclared variable '%s'", identifier.getName()),
+                    left.getPosition(), left.getLength());
+        }
+
+        if (variables.get(identifier.getName()).getType() != right.getType()) {
+            throw new RuntimeException();
+        }
+
+        BaseObj newObj;
+
+        if (right instanceof NumberObj n) {
+            newObj = new NumberObj(n.getValue());
+        } else if (right instanceof StringObj s) {
+            newObj = new StringObj(s.getValue());
+        } else if (right instanceof BooleanObj b) {
+            newObj = new BooleanObj(b.getValue());
+        } else {
+            newObj = right;
+        }
+
+        variables.put(identifier.getName(), newObj);
+
+        return newObj;
     }
 
     private String stringValue(BaseObj obj) {

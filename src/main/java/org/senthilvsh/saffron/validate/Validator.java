@@ -1,14 +1,29 @@
 package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
-import org.senthilvsh.saffron.runtime.Type;
+import org.senthilvsh.saffron.common.Type;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Validator {
+    private final Map<String, Type> variableTypes = new HashMap<>();
+
     public void validate(Program program) throws ValidatorException {
         for (Statement s : program.getStatements()) {
-            if (s instanceof ExpressionStatement es) {
-                getType(es.getExpression());
+            validate(s);
+        }
+    }
+
+    private void validate(Statement statement) throws ValidatorException {
+        if (statement instanceof ExpressionStatement es) {
+            getType(es.getExpression());
+        } else if (statement instanceof VariableDeclarationStatement vds) {
+            String name = vds.getName();
+            if (variableTypes.containsKey(name)) {
+                throw new ValidatorException(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
+            variableTypes.put(name, Type.of(vds.getType()));
         }
     }
 
@@ -21,6 +36,13 @@ public class Validator {
         }
         if (expression instanceof BooleanLiteral) {
             return Type.BOOLEAN;
+        }
+        if (expression instanceof Identifier identifier) {
+            if (!variableTypes.containsKey(identifier.getName())) {
+                throw new ValidatorException(String.format("Undeclared variable '%s'", identifier.getName()),
+                        identifier.getPosition(), identifier.getLength());
+            }
+            return variableTypes.get(identifier.getName());
         }
         if (expression instanceof BinaryExpression binaryExpression) {
             Type left = getType(binaryExpression.getLeft());
@@ -59,6 +81,9 @@ public class Validator {
                 }
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
+                }
+                if ("=".equals(operator)) {
+                    return assign(left, right);
                 }
             } catch (RuntimeException ex) {
                 throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
@@ -152,6 +177,13 @@ public class Validator {
     Type notEqual(Type left, Type right) {
         if (left == right && (left == Type.NUMBER || left == Type.BOOLEAN || left == Type.STRING)) {
             return Type.BOOLEAN;
+        }
+        throw new RuntimeException();
+    }
+
+    Type assign(Type left, Type right) {
+        if (left == right) {
+            return left;
         }
         throw new RuntimeException();
     }

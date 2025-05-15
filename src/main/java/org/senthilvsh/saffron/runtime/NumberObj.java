@@ -1,5 +1,7 @@
 package org.senthilvsh.saffron.runtime;
 
+import org.senthilvsh.saffron.common.Type;
+
 public class NumberObj extends BaseObj {
     private final double value;
 

@@ -39,15 +39,55 @@ public class Parser {
 
     Statement statement() throws ParserException {
         // TODO: In case of invalid token or mismatch, create error statement and continue parsing from the next statement
-        Expression expression = expression();
+        assertLookAheadNotNull();
 
-        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-
-        return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("var")) {
+            Token varKeyword = consume(TokenType.KEYWORD, new String[]{"var"});
+            Token variableName = consume(TokenType.IDENTIFIER);
+            consume(TokenType.SYMBOL, new String[]{":"});
+            Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new VariableDeclarationStatement(variableName.getValue(), typeSpecifier.getValue(),
+                    varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
+        } else {
+            Expression expression = expression();
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
+        }
     }
 
     Expression expression() throws ParserException {
-        return equalityExpression();
+        return assignmentExpression();
+    }
+
+    Expression assignmentExpression() throws ParserException {
+        assertLookAheadNotNull();
+
+        if (lookahead.getType() != TokenType.IDENTIFIER) {
+            return equalityExpression();
+        }
+
+        Expression left = identifier();
+
+        if (lookahead == null || !lookahead.getValue().equals("=")) {
+            return left;
+        }
+
+        Token operator = consume(TokenType.OPERATOR, new String[]{"="});
+
+        assertLookAheadNotNull();
+
+        Expression right = equalityExpression();
+
+        int position = left.getPosition();
+        int length = (right.getPosition() + right.getLength()) - left.getPosition();
+
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    Expression identifier() throws ParserException {
+        Token token = consume(TokenType.IDENTIFIER);
+        return new Identifier(token.getValue(), token.getPosition(), token.getLength());
     }
 
     Expression equalityExpression() throws ParserException {

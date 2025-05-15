@@ -8,8 +8,10 @@ public class Lexer {
     private static final Pattern NUMBER_PATTERN = Pattern.compile("((([0-9]+)([.]?)([0-9]+))|([0-9]+))([\\s\\S]*)");
     private static final Pattern STRING_PATTERN = Pattern.compile("((\")([^\"]*)(\"))([\\s\\S]*)");
     private static final Pattern BOOLEAN_PATTERN = Pattern.compile("(true|false)([\\s\\S]*)");
-    private static final Pattern OPERATOR_PATTERN = Pattern.compile("(>=|<=|>|<|==|!=|\\+|-|\\*|/|%)([\\s\\S]*)");
-    private static final Pattern SYMBOL_PATTERN = Pattern.compile("([();])([\\s\\S]*)");
+    private static final Pattern OPERATOR_PATTERN = Pattern.compile("(>=|<=|>|<|==|!=|=|\\+|-|\\*|/|%)([\\s\\S]*)");
+    private static final Pattern SYMBOL_PATTERN = Pattern.compile("([();:])([\\s\\S]*)");
+    private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("(([_a-zA-Z]+)([_a-zA-Z0-9]*))([\\s\\S]*)");
+    private static final Pattern KEYWORD_PATTERN = Pattern.compile("(var|num|str|bool)([\\s\\S]*)");
 
     private final String source;
 
@@ -70,6 +72,23 @@ public class Lexer {
         if (m.matches()) {
             String match = m.group(1);
             Token token = new Token(TokenType.SYMBOL, match, position);
+            position += match.length();
+            return token;
+        }
+
+        // Note: Always check keyword before identifier.
+        m = KEYWORD_PATTERN.matcher(source.substring(position));
+        if (m.matches()) {
+            String match = m.group(1);
+            Token token = new Token(TokenType.KEYWORD, match, position);
+            position += match.length();
+            return token;
+        }
+
+        m = IDENTIFIER_PATTERN.matcher(source.substring(position));
+        if (m.matches()) {
+            String match = m.group(1);
+            Token token = new Token(TokenType.IDENTIFIER, match, position);
             position += match.length();
             return token;
         }

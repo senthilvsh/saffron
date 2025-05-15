@@ -1,4 +1,4 @@
-package org.senthilvsh.saffron.runtime;
+package org.senthilvsh.saffron.common;
 
 import java.util.Objects;
 
@@ -32,5 +32,14 @@ public class Type {
     @Override
     public String toString() {
         return String.format("Type { name: %s }", name);
+    }
+
+    public static Type of(String name) {
+        return switch (name) {
+            case "num" -> NUMBER;
+            case "str" -> STRING;
+            case "bool" -> BOOLEAN;
+            default -> throw new RuntimeException("Unexpected value: " + name);
+        };
     }
 }

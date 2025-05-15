@@ -6,5 +6,7 @@ public enum TokenType {
     BOOLEAN,
     OPERATOR,
     SYMBOL,
+    KEYWORD,
+    IDENTIFIER,
     INVALID
 }
