@@ -1,20 +1,9 @@
 package org.senthilvsh.saffron.runtime;
 
-public class InterpreterException extends Exception {
-    private final int position;
-    private final int length;
+import org.senthilvsh.saffron.common.SaffronException;
 
+public class InterpreterException extends SaffronException {
     public InterpreterException(String s, int position, int length) {
-        super(s);
-        this.position = position;
-        this.length = length;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public int getLength() {
-        return length;
+        super(s, position, length);
     }
 }

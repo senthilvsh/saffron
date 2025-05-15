@@ -3,16 +3,28 @@ package org.senthilvsh.saffron.parser;
 import org.senthilvsh.saffron.ast.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Parser {
-    private final Lexer lexer;
+
+    private final List<Token> tokens = new ArrayList<>();
+    private int tokenIdx = 0;
     private Token lookahead;
 
     public Parser(String source) {
-        lexer = new Lexer(source);
-        lookahead = lexer.next();
-        // TODO: Get all tokens at once into a list and start parsing. This will help with error position at EOF
+        Lexer lexer = new Lexer(source);
+
+        Token token = lexer.next();
+        while (token != null) {
+            tokens.add(token);
+            token = lexer.next();
+        }
+
+        if (!tokens.isEmpty()) {
+            lookahead = tokens.get(0);
+        }
     }
 
     // TODO: Return a ParserResult which includes a list of errors along with the program
@@ -29,7 +41,7 @@ public class Parser {
         // TODO: In case of invalid token or mismatch, create error statement and continue parsing from the next statement
         Expression expression = additiveExpression();
 
-        Token semicolon = consume(TokenType.SYMBOL, ";");
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
 
         return new ExpressionStatement(expression, expression.getPosition(), semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
     }
@@ -41,14 +53,9 @@ public class Parser {
             return left;
         }
 
-        Token operator = consume(TokenType.OPERATOR);
-        if (!operator.getValue().equals("+") && !operator.getValue().equals("-")) {
-            throw new ParserException("Expected a '+' or '-'", operator.getPosition(), operator.getLength());
-        }
+        Token operator = consume(TokenType.OPERATOR, new String[]{"+", "-"});
 
-        if (lookahead == null) {
-            throw new ParserException("Reached end of stream unexpectedly");
-        }
+        assertLookAheadNotNull();
 
         Expression right = additiveExpression();
 
@@ -59,9 +66,7 @@ public class Parser {
     }
 
     Expression primaryExpression() throws ParserException {
-        if (lookahead == null) {
-            throw new ParserException("Reached end of stream unexpectedly");
-        }
+        assertLookAheadNotNull();
 
         if (lookahead.getType() == TokenType.NUMBER) {
             Token token = consume(TokenType.NUMBER);
@@ -83,9 +88,7 @@ public class Parser {
     }
 
     Token consume(TokenType type) throws ParserException {
-        if (lookahead == null) {
-            throw new ParserException("Reached end of file unexpectedly");
-        }
+        assertLookAheadNotNull();
 
         // TODO: In case of invalid token, throw specific exception
 
@@ -94,27 +97,53 @@ public class Parser {
         }
 
         Token token = lookahead;
-        lookahead = lexer.next();
+        tokenIdx++;
+        if (tokenIdx >= tokens.size()) {
+            lookahead = null;
+        } else {
+            lookahead = tokens.get(tokenIdx);
+        }
         return token;
     }
 
-    Token consume(TokenType type, String value) throws ParserException {
+    Token consume(TokenType type, String[] values) throws ParserException {
         if (lookahead == null) {
-            throw new ParserException(String.format("Expected a '%s' but reached end of file", value));
+            Token last = tokens.get(tokens.size() - 1);
+            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
+                    last.getPosition(), last.getLength());
         }
 
         // TODO: In case of invalid token, throw specific exception
 
         if (lookahead.getType() != type) {
-            throw new ParserException("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
+            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))), lookahead.getPosition(), lookahead.getLength());
         }
 
-        if (!lookahead.getValue().equals(value)) {
-            throw new ParserException(String.format("Expected a '%s'", value), lookahead.getPosition(), lookahead.getLength());
+        boolean found = false;
+        for (String value : values) {
+            if (lookahead.getValue().equals(value)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))), lookahead.getPosition(), lookahead.getLength());
         }
 
         Token token = lookahead;
-        lookahead = lexer.next();
+        tokenIdx++;
+        if (tokenIdx >= tokens.size()) {
+            lookahead = null;
+        } else {
+            lookahead = tokens.get(tokenIdx);
+        }
         return token;
+    }
+
+    void assertLookAheadNotNull() throws ParserException {
+        if (lookahead == null) {
+            Token last = tokens.get(tokens.size() - 1);
+            throw new ParserException("End of file reached unexpectedly", last.getPosition(), last.getLength());
+        }
     }
 }

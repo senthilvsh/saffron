@@ -1,24 +1,9 @@
 package org.senthilvsh.saffron.parser;
 
-public class ParserException extends Exception {
-    private int position;
-    private int length;
+import org.senthilvsh.saffron.common.SaffronException;
 
-    public ParserException(String message) {
-        super(message);
-    }
-
-    public ParserException(String message, int position, int length) {
-        super(message);
-        this.position = position;
-        this.length = length;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public int getLength() {
-        return length;
+public class ParserException extends SaffronException {
+    public ParserException(String s, int position, int length) {
+        super(s, position, length);
     }
 }
