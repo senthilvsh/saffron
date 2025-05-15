@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Interpreter {
-    private final Map<String, BaseObj> variables = new HashMap<>();
+    private final Map<String, Variable> variables = new HashMap<>();
 
     public void execute(Program program) throws InterpreterException {
         for (Statement s : program.getStatements()) {
@@ -22,9 +22,11 @@ public class Interpreter {
         } else if (statement instanceof VariableDeclarationStatement vds) {
             String name = vds.getName();
             if (variables.containsKey(name)) {
-                throw new InterpreterException(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
+                throw new InterpreterException(String.format("Re-declaration of variable '%s'", name),
+                        vds.getPosition(), vds.getLength());
             }
-            variables.put(name, new BaseObj(Type.of(vds.getType())));
+            Variable v = new Variable(name, Type.of(vds.getType()), null);
+            variables.put(name, v);
         }
     }
 
@@ -39,14 +41,22 @@ public class Interpreter {
             return new BooleanObj(b.getValue());
         }
         if (expression instanceof Identifier i) {
-            // TODO: This logic is for reading variable
-            return null;
+            if (!variables.containsKey(i.getName())) {
+                throw new InterpreterException(String.format("Undefined variable '%s'", i.getName()),
+                        i.getPosition(), i.getLength());
+            }
+            return variables.get(i.getName()).getValue();
         }
         if (expression instanceof BinaryExpression binaryExpression) {
-            // TODO: Check for assignment expression here
+            String operator = binaryExpression.getOperator();
+
+            if ("=".equals(operator)) {
+                return assign(binaryExpression);
+            }
+
             BaseObj left = evaluate(binaryExpression.getLeft());
             BaseObj right = evaluate(binaryExpression.getRight());
-            String operator = binaryExpression.getOperator();
+
             try {
                 if ("+".equals(operator)) {
                     return add(left, right);
@@ -80,9 +90,6 @@ public class Interpreter {
                 }
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
-                }
-                if ("=".equals(operator)) {
-                    return assign(binaryExpression.getLeft(), right);
                 }
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
@@ -194,18 +201,16 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj assign(Expression left, BaseObj right) throws InterpreterException {
-        if (!(left instanceof Identifier identifier)) {
-            throw new InterpreterException("Left side of assignment must be a variable", left.getPosition(), left.getLength());
-        }
+    BaseObj assign(BinaryExpression binaryExpression) throws InterpreterException {
+        String variableName = getVariableName(binaryExpression);
 
-        if (!variables.containsKey(identifier.getName())) {
-            throw new InterpreterException(String.format("Undeclared variable '%s'", identifier.getName()),
-                    left.getPosition(), left.getLength());
-        }
+        BaseObj right = evaluate(binaryExpression.getRight());
 
-        if (variables.get(identifier.getName()).getType() != right.getType()) {
-            throw new RuntimeException();
+        Variable variable = variables.get(variableName);
+        if (variable.getType() != right.getType()) {
+            throw new InterpreterException(String.format("Cannot assign value of type '%s' to variable of type '%s'",
+                    right.getType(), variable.getType()),
+                    binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
         }
 
         BaseObj newObj;
@@ -220,9 +225,24 @@ public class Interpreter {
             newObj = right;
         }
 
-        variables.put(identifier.getName(), newObj);
+        variable.setValue(newObj);
 
         return newObj;
+    }
+
+    private String getVariableName(BinaryExpression binaryExpression) throws InterpreterException {
+        Expression left = binaryExpression.getLeft();
+
+        if (!(left instanceof Identifier identifier)) {
+            throw new InterpreterException("Left side of assignment must be a variable", left.getPosition(), left.getLength());
+        }
+
+        String variableName = identifier.getName();
+        if (!variables.containsKey(variableName)) {
+            throw new InterpreterException(String.format("Undeclared variable '%s'", identifier.getName()),
+                    left.getPosition(), left.getLength());
+        }
+        return variableName;
     }
 
     private String stringValue(BaseObj obj) {

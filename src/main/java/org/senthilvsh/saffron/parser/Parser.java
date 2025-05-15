@@ -63,11 +63,7 @@ public class Parser {
     Expression assignmentExpression() throws ParserException {
         assertLookAheadNotNull();
 
-        if (lookahead.getType() != TokenType.IDENTIFIER) {
-            return equalityExpression();
-        }
-
-        Expression left = identifier();
+        Expression left = equalityExpression();
 
         if (lookahead == null || !lookahead.getValue().equals("=")) {
             return left;
@@ -83,11 +79,6 @@ public class Parser {
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
-    }
-
-    Expression identifier() throws ParserException {
-        Token token = consume(TokenType.IDENTIFIER);
-        return new Identifier(token.getValue(), token.getPosition(), token.getLength());
     }
 
     Expression equalityExpression() throws ParserException {
@@ -193,6 +184,11 @@ public class Parser {
             Expression expression = expression();
             consume(TokenType.SYMBOL, new String[]{")"});
             return expression;
+        }
+
+        if (lookahead.getType() == TokenType.IDENTIFIER) {
+            Token token = consume(TokenType.IDENTIFIER);
+            return new Identifier(token.getValue(), token.getPosition(), token.getLength());
         }
 
         if (lookahead.getType() == TokenType.NUMBER) {
