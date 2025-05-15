@@ -32,7 +32,15 @@ public class Validator {
                 }
                 if ("-".equals(operator)) {
                     return subtract(left, right);
-
+                }
+                if ("*".equals(operator)) {
+                    return multiply(left, right);
+                }
+                if ("/".equals(operator)) {
+                    return divide(left, right);
+                }
+                if ("%".equals(operator)) {
+                    return modulo(left, right);
                 }
             } catch (RuntimeException ex) {
                 throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
@@ -53,6 +61,27 @@ public class Validator {
     }
 
     Type subtract(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type multiply(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type divide(Type left, Type right) {
+        if (left == Type.NUMBER && right == Type.NUMBER) {
+            return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    Type modulo(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
             return Type.NUMBER;
         }

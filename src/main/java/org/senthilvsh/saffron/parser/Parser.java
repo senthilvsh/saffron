@@ -47,7 +47,7 @@ public class Parser {
     }
 
     Expression additiveExpression() throws ParserException {
-        Expression left = primaryExpression();
+        Expression left = multiplicativeExpression();
 
         if (lookahead == null || !(lookahead.getValue().equals("+") || lookahead.getValue().equals("-"))) {
             return left;
@@ -58,6 +58,25 @@ public class Parser {
         assertLookAheadNotNull();
 
         Expression right = additiveExpression();
+
+        int position = left.getPosition();
+        int length = (right.getPosition() + right.getLength()) - left.getPosition();
+
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    Expression multiplicativeExpression() throws ParserException {
+        Expression left = primaryExpression();
+
+        if (lookahead == null || !(lookahead.getValue().equals("*") || lookahead.getValue().equals("/") || lookahead.getValue().equals("%"))) {
+            return left;
+        }
+
+        Token operator = consume(TokenType.OPERATOR, new String[]{"*", "/", "%"});
+
+        assertLookAheadNotNull();
+
+        Expression right = multiplicativeExpression();
 
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
@@ -109,14 +128,17 @@ public class Parser {
     Token consume(TokenType type, String[] values) throws ParserException {
         if (lookahead == null) {
             Token last = tokens.get(tokens.size() - 1);
-            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
+            throw new ParserException(String.format("Expected one of %s",
+                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     last.getPosition(), last.getLength());
         }
 
         // TODO: In case of invalid token, throw specific exception
 
         if (lookahead.getType() != type) {
-            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))), lookahead.getPosition(), lookahead.getLength());
+            throw new ParserException(String.format("Expected one of %s",
+                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
+                    lookahead.getPosition(), lookahead.getLength());
         }
 
         boolean found = false;
@@ -127,7 +149,9 @@ public class Parser {
             }
         }
         if (!found) {
-            throw new ParserException(String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))), lookahead.getPosition(), lookahead.getLength());
+            throw new ParserException(String.format("Expected one of %s",
+                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
+                    lookahead.getPosition(), lookahead.getLength());
         }
 
         Token token = lookahead;

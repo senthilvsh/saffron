@@ -33,6 +33,15 @@ public class Interpreter {
                 if ("-".equals(operator)) {
                     return subtract(left, right);
                 }
+                if ("*".equals(operator)) {
+                    return multiply(left, right);
+                }
+                if ("/".equals(operator)) {
+                    return divide(left, right);
+                }
+                if ("%".equals(operator)) {
+                    return modulo(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
                         left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -57,10 +66,26 @@ public class Interpreter {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() - ((NumberObj) right).getValue());
         }
-        if (left.getType() == Type.STRING || right.getType() == Type.STRING) {
-            String leftStr = stringValue(left);
-            String rightStr = stringValue(right);
-            return new StringObj(leftStr + rightStr);
+        throw new RuntimeException();
+    }
+
+    BaseObj multiply(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new NumberObj(((NumberObj) left).getValue() * ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj divide(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new NumberObj(((NumberObj) left).getValue() / ((NumberObj) right).getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj modulo(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
+            return new NumberObj(((NumberObj) left).getValue() % ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
