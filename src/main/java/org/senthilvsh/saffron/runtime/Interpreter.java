@@ -252,7 +252,12 @@ public class Interpreter {
 
     private String stringValue(BaseObj obj) {
         if (obj instanceof NumberObj numberObj) {
-            return String.valueOf(numberObj.getValue());
+            double val = numberObj.getValue();
+            if (val == (long) val) {
+                return String.format("%d", (long) numberObj.getValue());
+            } else {
+                return String.valueOf(numberObj.getValue());
+            }
         }
         if (obj instanceof StringObj stringObj) {
             return stringObj.getValue();
