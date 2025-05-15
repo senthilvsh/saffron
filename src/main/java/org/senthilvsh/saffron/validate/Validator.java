@@ -1,10 +1,10 @@
-package org.senthilvsh.saffron.typecheck;
+package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.runtime.Type;
 
-public class TypeChecker {
-    public void check(Program program) throws TypeCheckerException {
+public class Validator {
+    public void validate(Program program) throws ValidatorException {
         for (Statement s : program.getStatements()) {
             if (s instanceof ExpressionStatement es) {
                 getType(es.getExpression());
@@ -12,7 +12,7 @@ public class TypeChecker {
         }
     }
 
-    public Type getType(Expression expression) throws TypeCheckerException {
+    public Type getType(Expression expression) throws ValidatorException {
         if (expression instanceof NumberLiteral) {
             return Type.NUMBER;
         }
@@ -35,11 +35,11 @@ public class TypeChecker {
 
                 }
             } catch (RuntimeException ex) {
-                throw new TypeCheckerException(String.format("Cannot perform '%s' operation between %s and %s",
+                throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
-        throw new TypeCheckerException("Unknown expression type", expression.getPosition(), expression.getLength());
+        throw new ValidatorException("Unknown expression type", expression.getPosition(), expression.getLength());
     }
 
     Type add(Type left, Type right) {

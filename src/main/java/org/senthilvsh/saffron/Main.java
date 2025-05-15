@@ -4,7 +4,7 @@ import org.senthilvsh.saffron.ast.Program;
 import org.senthilvsh.saffron.common.SaffronException;
 import org.senthilvsh.saffron.parser.Parser;
 import org.senthilvsh.saffron.runtime.Interpreter;
-import org.senthilvsh.saffron.typecheck.TypeChecker;
+import org.senthilvsh.saffron.validate.Validator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,11 +30,11 @@ public class Main {
         }
 
         Parser parser = new Parser(source);
-        TypeChecker typeChecker = new TypeChecker();
+        Validator validator = new Validator();
         Interpreter interpreter = new Interpreter();
         try {
             Program program = parser.program();
-            typeChecker.check(program);
+            validator.validate(program);
             interpreter.execute(program);
         } catch (SaffronException e) {
             printError(e.getMessage(), source, e.getPosition(), e.getLength());
