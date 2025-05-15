@@ -13,11 +13,17 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
+    // TODO: Add user guide to readme
+    // TODO: Add sample programs folder
+    // TODO: Add support for single-line comments
+    // TODO: Add support for multi-line comments
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Usage: saffron <input>");
             return;
         }
+
+        // TODO: Print version info
 
         String input = args[0];
 
@@ -25,7 +31,7 @@ public class Main {
         try {
             source = Files.readString(Path.of(input));
         } catch (IOException e) {
-            System.err.printf("Unable to read input file '%s'. Reason: %s%n", input, e.getMessage());
+            System.err.printf("Unable to read input file '%s'%n", input);
             return;
         }
 

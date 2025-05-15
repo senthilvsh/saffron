@@ -37,8 +37,8 @@ public class Parser {
         return new Program(statements);
     }
 
+    // TODO: In case of error during parsing, create an error statement and continue parsing from the next statement
     Statement statement() throws ParserException {
-        // TODO: In case of invalid token or mismatch, create error statement and continue parsing from the next statement
         assertLookAheadNotNull();
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("var")) {
@@ -86,6 +86,7 @@ public class Parser {
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
+        // TODO: Dedicated class for assignment expression
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
@@ -221,8 +222,6 @@ public class Parser {
     Token consume(TokenType type) throws ParserException {
         assertLookAheadNotNull();
 
-        // TODO: In case of invalid token, throw specific exception
-
         if (lookahead.getType() != type) {
             throw new ParserException("Token type mismatch", lookahead.getPosition(), lookahead.getLength());
         }
@@ -244,8 +243,6 @@ public class Parser {
                     Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     last.getPosition(), last.getLength());
         }
-
-        // TODO: In case of invalid token, throw specific exception
 
         if (lookahead.getType() != type) {
             throw new ParserException(String.format("Expected one of %s",
