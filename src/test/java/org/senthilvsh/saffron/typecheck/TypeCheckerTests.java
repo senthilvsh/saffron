@@ -63,7 +63,7 @@ public class TypeCheckerTests {
     public void testBinaryExpressionAdditionBothNumbers() {
         Expression left = new NumberLiteral(10, 0, 2);
         Expression right = new NumberLiteral(20, 5, 2);
-        Expression binaryExpression = new BinaryExpression(left, "+", right, 0, 7);
+        Expression binaryExpression = new BinaryExpression(left, "+", right, 0, 7, 3, 1);
         TypeChecker typeChecker = new TypeChecker();
         try {
             Type type = typeChecker.getType(binaryExpression);
@@ -77,7 +77,7 @@ public class TypeCheckerTests {
     public void testBinaryExpressionAdditionOneString() {
         Expression left = new StringLiteral("10", 0, 4);
         Expression right = new NumberLiteral(20, 7, 2);
-        Expression binaryExpression = new BinaryExpression(left, "+", right, 0, 9);
+        Expression binaryExpression = new BinaryExpression(left, "+", right, 0, 9, 5, 1);
         TypeChecker typeChecker = new TypeChecker();
         try {
             Type type = typeChecker.getType(binaryExpression);

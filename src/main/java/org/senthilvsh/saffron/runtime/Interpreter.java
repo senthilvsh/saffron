@@ -26,7 +26,7 @@ public class Interpreter {
                 }
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
-                        left.getType().getName(), right.getType().getName()), binaryExpression.getPosition(), binaryExpression.getLength());
+                        left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
         throw new InterpreterException("Unknown expression type", expression.getPosition(), expression.getLength());

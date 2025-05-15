@@ -36,7 +36,7 @@ public class Parser {
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
-        return new BinaryExpression(left, operator.getValue(), right, position, length);
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
     Expression primaryExpression() throws ParserException {

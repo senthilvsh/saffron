@@ -13,6 +13,8 @@ import org.senthilvsh.saffron.typecheck.TypeCheckerException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -38,7 +40,7 @@ public class Main {
             program = parser.program();
         } catch (ParserException e) {
             System.err.println("Error while parsing program");
-            e.printStackTrace(System.err);
+            System.out.println(source.substring(e.getPosition(), e.getPosition() + e.getLength()));
             return;
         }
 
@@ -46,8 +48,10 @@ public class Main {
         try {
             typeChecker.getType(program.getExpression());
         } catch (TypeCheckerException e) {
-            System.err.println("Program contains errors");
-            e.printStackTrace(System.err);
+            System.err.println(e.getMessage());
+            System.err.println(getLine(source, e.getPosition()));
+            System.err.println(squggly(e.getPosition(), e.getLength()));
+            System.err.println();
             return;
         }
 
@@ -61,5 +65,29 @@ public class Main {
             System.err.println("Error while executing program");
             e.printStackTrace(System.err);
         }
+    }
+
+    private static String squggly(int position, int length) {
+        String str = "";
+        for (int i = 0; i < position; i++) {
+            str += " ";
+        }
+        for (int i = position; i < position + length; i++) {
+            str += "^";
+        }
+        return str;
+    }
+
+    private static String getLine(String source, int position) {
+        List<String> lines = Arrays.stream(source.split("\n")).toList();
+        int lineStart = 0;
+        for (String line : lines) {
+            int lineEnd = lineStart + line.length();
+            if (position >= lineStart && position <= lineEnd) {
+                return line;
+            }
+            lineStart = lineEnd + 1;
+        }
+        return "";
     }
 }

@@ -28,7 +28,7 @@ public class TypeChecker {
                 }
             } catch (RuntimeException ex) {
                 throw new TypeCheckerException(String.format("Cannot perform '%s' operation between %s and %s",
-                        operator, left.getName(), right.getName()), binaryExpression.getPosition(), binaryExpression.getLength());
+                        operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
         throw new TypeCheckerException("Unknown expression type", expression.getPosition(), expression.getLength());
