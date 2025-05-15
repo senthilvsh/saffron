@@ -54,6 +54,12 @@ public class Validator {
                 if ("<=".equals(operator)) {
                     return lessThanOrEqual(left, right);
                 }
+                if ("==".equals(operator)) {
+                    return equal(left, right);
+                }
+                if ("!=".equals(operator)) {
+                    return notEqual(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -124,6 +130,28 @@ public class Validator {
     Type lessThanOrEqual(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
             return Type.NUMBER;
+        }
+        throw new RuntimeException();
+    }
+
+    /**
+     * Equals operator can be applied only between objects of the same type AND the type must be
+     * a number, string or boolean.
+     */
+    Type equal(Type left, Type right) {
+        if (left == right && (left == Type.NUMBER || left == Type.BOOLEAN || left == Type.STRING)) {
+            return Type.BOOLEAN;
+        }
+        throw new RuntimeException();
+    }
+
+    /**
+     * Not Equals operator can be applied only between objects of the same type AND the type must be
+     * a number, string or boolean.
+     */
+    Type notEqual(Type left, Type right) {
+        if (left == right && (left == Type.NUMBER || left == Type.BOOLEAN || left == Type.STRING)) {
+            return Type.BOOLEAN;
         }
         throw new RuntimeException();
     }

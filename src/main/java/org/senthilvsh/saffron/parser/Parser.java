@@ -47,7 +47,30 @@ public class Parser {
     }
 
     Expression expression() throws ParserException {
-        return relationalExpression();
+        return equalityExpression();
+    }
+
+    Expression equalityExpression() throws ParserException {
+        Expression left = relationalExpression();
+
+        if (lookahead == null || !isEqualityOperator(lookahead.getValue())) {
+            return left;
+        }
+
+        Token operator = consume(TokenType.OPERATOR, new String[]{"==", "!="});
+
+        assertLookAheadNotNull();
+
+        Expression right = equalityExpression();
+
+        int position = left.getPosition();
+        int length = (right.getPosition() + right.getLength()) - left.getPosition();
+
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    private boolean isEqualityOperator(String operator) {
+        return "==".equals(operator) || "!=".equals(operator);
     }
 
     Expression relationalExpression() throws ParserException {
@@ -79,7 +102,7 @@ public class Parser {
     Expression additiveExpression() throws ParserException {
         Expression left = multiplicativeExpression();
 
-        if (lookahead == null || !(lookahead.getValue().equals("+") || lookahead.getValue().equals("-"))) {
+        if (lookahead == null || !isAdditiveOperator(lookahead.getValue())) {
             return left;
         }
 
@@ -95,10 +118,14 @@ public class Parser {
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
+    private boolean isAdditiveOperator(String operator) {
+        return "+".equals(operator) || "-".equals(operator);
+    }
+
     Expression multiplicativeExpression() throws ParserException {
         Expression left = primaryExpression();
 
-        if (lookahead == null || !(lookahead.getValue().equals("*") || lookahead.getValue().equals("/") || lookahead.getValue().equals("%"))) {
+        if (lookahead == null || !isMultiplicativeOperator(lookahead.getValue())) {
             return left;
         }
 
@@ -114,13 +141,17 @@ public class Parser {
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
+    private boolean isMultiplicativeOperator(String operator) {
+        return "*".equals(operator) || "/".equals(operator) || "%".equals(operator);
+    }
+
     Expression primaryExpression() throws ParserException {
         assertLookAheadNotNull();
 
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("(")) {
-            Token open = consume(TokenType.SYMBOL, new String[]{"("});
+            consume(TokenType.SYMBOL, new String[]{"("});
             Expression expression = expression();
-            Token close = consume(TokenType.SYMBOL, new String[]{")"});
+            consume(TokenType.SYMBOL, new String[]{")"});
             return expression;
         }
 

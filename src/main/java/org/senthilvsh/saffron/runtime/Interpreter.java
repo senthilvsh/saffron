@@ -54,7 +54,12 @@ public class Interpreter {
                 if ("<=".equals(operator)) {
                     return lessThanOrEqual(left, right);
                 }
-
+                if ("==".equals(operator)) {
+                    return equal(left, right);
+                }
+                if ("!=".equals(operator)) {
+                    return notEqual(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
                         left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -128,6 +133,40 @@ public class Interpreter {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new BooleanObj(((NumberObj) left).getValue() <= ((NumberObj) right).getValue());
         }
+        throw new RuntimeException();
+    }
+
+    BaseObj equal(BaseObj left, BaseObj right) {
+        if (left.getType() == right.getType()) {
+            if (left.getType() == Type.NUMBER) {
+                return new BooleanObj(((NumberObj) left).getValue() == ((NumberObj) right).getValue());
+            } else if (left.getType() == Type.STRING) {
+                return new BooleanObj(((StringObj) left).getValue().equals(((StringObj) right).getValue()));
+            } else if (left.getType() == Type.BOOLEAN) {
+                return new BooleanObj(((BooleanObj) left).getValue() == ((BooleanObj) right).getValue());
+            } else {
+                // Not a type that supports == operator
+                throw new RuntimeException();
+            }
+        }
+        // Types of left and right are different
+        throw new RuntimeException();
+    }
+
+    BaseObj notEqual(BaseObj left, BaseObj right) {
+        if (left.getType() == right.getType()) {
+            if (left.getType() == Type.NUMBER) {
+                return new BooleanObj(((NumberObj) left).getValue() != ((NumberObj) right).getValue());
+            } else if (left.getType() == Type.STRING) {
+                return new BooleanObj(!((StringObj) left).getValue().equals(((StringObj) right).getValue()));
+            } else if (left.getType() == Type.BOOLEAN) {
+                return new BooleanObj(((BooleanObj) left).getValue() != ((BooleanObj) right).getValue());
+            } else {
+                // Not a type that supports != operator
+                throw new RuntimeException();
+            }
+        }
+        // Types of left and right are different
         throw new RuntimeException();
     }
 
