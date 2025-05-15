@@ -34,6 +34,7 @@ public class Main {
         Interpreter interpreter = new Interpreter();
         try {
             Program program = parser.program();
+            // TODO: Print all parsing errors from the ParseResult
             validator.validate(program);
             interpreter.execute(program);
         } catch (SaffronException e) {
@@ -42,6 +43,7 @@ public class Main {
     }
 
     private static void printError(String message, String source, int position, int length) {
+        // TODO: Print line number
         System.err.println(message + "\n");
         LineInfo lineInfo = getLine(source, position);
         if (lineInfo != null) {

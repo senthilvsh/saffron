@@ -261,6 +261,7 @@ public class Parser {
             }
         }
         if (!found) {
+            // TODO: Better error message when only one item is in values array
             throw new ParserException(String.format("Expected one of %s",
                     Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
                     lookahead.getPosition(), lookahead.getLength());

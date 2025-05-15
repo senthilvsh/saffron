@@ -2,12 +2,12 @@ package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.common.Type;
-import org.senthilvsh.saffron.runtime.InterpreterException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Validator {
+    // TODO: Create classes to encapsulate type-checking information
     private final Map<String, Type> variableTypes = new HashMap<>();
     private final Map<String, Boolean> variableAssignmentStatus = new HashMap<>();
 
@@ -193,6 +193,10 @@ public class Validator {
         if (!(binaryExpression.getLeft() instanceof Identifier identifier)) {
             throw new ValidatorException("Left side of assignment must be a variable",
                     binaryExpression.getLeft().getPosition(), binaryExpression.getLeft().getLength());
+        }
+        if (!variableTypes.containsKey(identifier.getName())) {
+            throw new ValidatorException(String.format("Undeclared variable '%s'", identifier.getName()),
+                    identifier.getPosition(), identifier.getLength());
         }
         Type variableType = variableTypes.get(identifier.getName());
         Type right = getType(binaryExpression.getRight());

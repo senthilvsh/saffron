@@ -76,19 +76,15 @@ public class Lexer {
             return token;
         }
 
-        // Note: Always check keyword before identifier.
-        m = KEYWORD_PATTERN.matcher(source.substring(position));
-        if (m.matches()) {
-            String match = m.group(1);
-            Token token = new Token(TokenType.KEYWORD, match, position);
-            position += match.length();
-            return token;
-        }
-
         m = IDENTIFIER_PATTERN.matcher(source.substring(position));
         if (m.matches()) {
             String match = m.group(1);
-            Token token = new Token(TokenType.IDENTIFIER, match, position);
+            Token token;
+            if (isKeyword(match)) {
+                token = new Token(TokenType.KEYWORD, match, position);
+            } else {
+                token = new Token(TokenType.IDENTIFIER, match, position);
+            }
             position += match.length();
             return token;
         }
@@ -97,5 +93,13 @@ public class Lexer {
         Token token = new Token(TokenType.INVALID, value, position);
         position++;
         return token;
+    }
+
+    private boolean isKeyword(String identifier) {
+        return "var".equals(identifier) ||
+                "num".equals(identifier) ||
+                "str".equals(identifier) ||
+                "bool".equals(identifier) ||
+                "print".equals(identifier);
     }
 }
