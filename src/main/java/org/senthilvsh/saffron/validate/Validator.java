@@ -78,6 +78,21 @@ public class Validator {
                 }
                 return Type.NUMBER;
             }
+            if ("!".equals(operator)) {
+                if (operandType != Type.BOOLEAN) {
+                    throw new ValidationError(
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, operandType.getName()),
+                            unaryExpression.getOperatorPosition(),
+                            unaryExpression.getOperatorLength()
+                    );
+                }
+                return Type.BOOLEAN;
+            }
+            throw new ValidationError(
+                    String.format("Invalid unary operator '%s'", operator),
+                    unaryExpression.getOperatorPosition(),
+                    unaryExpression.getOperatorLength()
+            );
         }
         if (expression instanceof BinaryExpression binaryExpression) {
             String operator = binaryExpression.getOperator();

@@ -95,6 +95,22 @@ public class Interpreter {
                     return new NumberObj(-1 * numberObj.getValue());
                 }
             }
+            if ("!".contains(operator)) {
+                if (baseObj.getType() != Type.BOOLEAN) {
+                    throw new RuntimeError(
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getType().getName()),
+                            unaryExpression.getOperatorPosition(),
+                            unaryExpression.getOperatorLength()
+                    );
+                }
+                BooleanObj booleanObj = (BooleanObj) baseObj;
+                return new BooleanObj(!booleanObj.getValue());
+            }
+            throw new RuntimeError(
+                    String.format("Invalid unary operator '%s'", operator),
+                    unaryExpression.getOperatorPosition(),
+                    unaryExpression.getOperatorLength()
+            );
         }
         if (expression instanceof BinaryExpression binaryExpression) {
             String operator = binaryExpression.getOperator();
