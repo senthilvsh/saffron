@@ -17,9 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Support native functions
-    // TODO: Convert print statement to native function call
-    // TODO: Implement a 'scan' native function.
+    // TODO: Implement a 'readln' native function.
     // TODO: Add user guide to readme
     // TODO: Add sample programs folder
     // TODO: Check usage of VOID types in expressions

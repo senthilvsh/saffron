@@ -5,8 +5,7 @@ import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.stdlib.NativeFunction;
-import org.senthilvsh.saffron.stdlib.PrintString;
+import org.senthilvsh.saffron.stdlib.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,20 +20,8 @@ public class Interpreter {
     private FunctionDefinition functionUnderEvaluation = null;
 
     public Interpreter() {
+        functions.putAll(NativeFunctionsRegistry.getAll());
         stack.push(new Frame());
-
-        List<NativeFunction> nativeFunctions = new ArrayList<>();
-        nativeFunctions.add(new PrintString());
-
-        for (NativeFunction nf : nativeFunctions) {
-            String signature = nf.getName();
-            String argTypes = nf.getArguments().stream().map(a -> a.getType().getName().toLowerCase()).collect(Collectors.joining("_"));
-            if (!argTypes.isEmpty()) {
-                signature += ("_" + argTypes);
-            }
-            // TODO: Check redefinition (not likely, but still...)
-            functions.put(signature, new NativeFunctionDefinition(nf.getName(), nf.getArguments(), nf.getReturnType(), nf));
-        }
     }
 
     public void execute(Program program) throws RuntimeError {

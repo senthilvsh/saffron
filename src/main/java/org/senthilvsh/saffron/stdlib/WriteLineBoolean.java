@@ -3,21 +3,20 @@ package org.senthilvsh.saffron.stdlib;
 import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
+import org.senthilvsh.saffron.runtime.BooleanObj;
 import org.senthilvsh.saffron.runtime.FunctionReturn;
-import org.senthilvsh.saffron.runtime.StringObj;
 
 import java.util.List;
 
-public class PrintString implements NativeFunction {
-
+public class WriteLineBoolean implements NativeFunction {
     @Override
     public String getName() {
-        return "println";
+        return "writeln";
     }
 
     @Override
     public List<FunctionArgument> getArguments() {
-        return List.of(new FunctionArgument("value", Type.STRING));
+        return List.of(new FunctionArgument("value", Type.BOOLEAN));
     }
 
     @Override
@@ -27,8 +26,7 @@ public class PrintString implements NativeFunction {
 
     @Override
     public void run(Frame frame) throws FunctionReturn {
-        StringObj baseObj = (StringObj) frame.get("value").getValue();
+        BooleanObj baseObj = (BooleanObj) frame.get("value").getValue();
         System.out.println(baseObj.getValue());
     }
-
 }

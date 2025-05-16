@@ -9,7 +9,10 @@ import java.util.List;
 
 public interface NativeFunction {
     String getName();
+
     List<FunctionArgument> getArguments();
+
     Type getReturnType();
+
     void run(Frame frame) throws FunctionReturn;
 }
