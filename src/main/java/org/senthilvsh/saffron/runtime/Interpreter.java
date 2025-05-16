@@ -1,14 +1,19 @@
 package org.senthilvsh.saffron.runtime;
 
 import org.senthilvsh.saffron.ast.*;
+import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
+import org.senthilvsh.saffron.common.Variable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Interpreter {
-    private final Map<String, Variable> variables = new HashMap<>();
+    private final FrameStack stack = new FrameStack();
+
+    public Interpreter() {
+        stack.push(new Frame());
+    }
 
     public void execute(Program program) throws RuntimeError {
         for (Statement s : program.getStatements()) {
@@ -66,7 +71,8 @@ public class Interpreter {
             throw new BreakLoop();
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
-            if (variables.containsKey(name)) {
+            Frame frame = stack.peek();
+            if (frame.containsKey(name)) {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
@@ -75,7 +81,7 @@ public class Interpreter {
                         vds.getPosition(), vds.getLength());
             }
             Variable v = new Variable(name, Type.of(vds.getType()), null);
-            variables.put(name, v);
+            frame.put(name, v);
         }
     }
 
@@ -90,11 +96,12 @@ public class Interpreter {
             return new BooleanObj(b.getValue());
         }
         if (expression instanceof Identifier i) {
-            if (!variables.containsKey(i.getName())) {
+            Frame frame = stack.peek();
+            if (!frame.containsKey(i.getName())) {
                 throw new RuntimeError(String.format("Undefined variable '%s'", i.getName()),
                         i.getPosition(), i.getLength());
             }
-            Variable variable = variables.get(i.getName());
+            Variable variable = frame.get(i.getName());
             if (variable.getValue() == null) {
                 throw new RuntimeError(String.format("Variable '%s' is used before being assigned", i.getName()),
                         i.getPosition(), i.getLength());
@@ -321,7 +328,8 @@ public class Interpreter {
 
         BaseObj right = evaluate(binaryExpression.getRight());
 
-        Variable variable = variables.get(variableName);
+        Frame frame = stack.peek();
+        Variable variable = frame.get(variableName);
         if (variable.getType() != right.getType()) {
             throw new RuntimeError(String.format("Cannot assign value of type '%s' to variable of type '%s'",
                     right.getType().getName(), variable.getType().getName()),
@@ -352,8 +360,9 @@ public class Interpreter {
             throw new RuntimeError("Left side of assignment must be a variable", left.getPosition(), left.getLength());
         }
 
+        Frame frame = stack.peek();
         String variableName = identifier.getName();
-        if (!variables.containsKey(variableName)) {
+        if (!frame.containsKey(variableName)) {
             throw new RuntimeError(String.format("Undeclared variable '%s'", identifier.getName()),
                     left.getPosition(), left.getLength());
         }

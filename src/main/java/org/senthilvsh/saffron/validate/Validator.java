@@ -1,14 +1,19 @@
 package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
+import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
+import org.senthilvsh.saffron.common.Variable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Validator {
-    private final Map<String, Type> variableTypes = new HashMap<>();
+    private final FrameStack stack = new FrameStack();
+
+    public Validator() {
+        stack.push(new Frame());
+    }
 
     public void validate(Program program) throws ValidationError {
         for (Statement s : program.getStatements()) {
@@ -52,10 +57,11 @@ public class Validator {
                 throw new ValidationError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
                         vds.getPosition(), vds.getLength());
             }
-            if (variableTypes.containsKey(name)) {
+            Frame frame = stack.peek();
+            if (frame.containsKey(name)) {
                 throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
-            variableTypes.put(name, Type.of(vds.getType()));
+            frame.put(name, new Variable(name, Type.of(vds.getType()), null));
         }
     }
 
@@ -70,11 +76,12 @@ public class Validator {
             return Type.BOOLEAN;
         }
         if (expression instanceof Identifier identifier) {
-            if (!variableTypes.containsKey(identifier.getName())) {
+            Frame frame = stack.peek();
+            if (!frame.containsKey(identifier.getName())) {
                 throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
-            return variableTypes.get(identifier.getName());
+            return frame.get(identifier.getName()).getType();
         }
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();
@@ -270,11 +277,12 @@ public class Validator {
             throw new ValidationError("Left side of assignment must be a variable",
                     binaryExpression.getLeft().getPosition(), binaryExpression.getLeft().getLength());
         }
-        if (!variableTypes.containsKey(identifier.getName())) {
+        Frame frame = stack.peek();
+        if (!frame.containsKey(identifier.getName())) {
             throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                     identifier.getPosition(), identifier.getLength());
         }
-        Type variableType = variableTypes.get(identifier.getName());
+        Type variableType = frame.get(identifier.getName()).getType();
         Type right = getType(binaryExpression.getRight());
         if (variableType == right) {
             return right;

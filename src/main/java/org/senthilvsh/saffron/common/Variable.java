@@ -1,6 +1,6 @@
-package org.senthilvsh.saffron.runtime;
+package org.senthilvsh.saffron.common;
 
-import org.senthilvsh.saffron.common.Type;
+import org.senthilvsh.saffron.runtime.BaseObj;
 
 public class Variable {
     private final String name;
