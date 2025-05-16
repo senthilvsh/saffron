@@ -5,6 +5,8 @@ import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
+import org.senthilvsh.saffron.stdlib.NativeFunction;
+import org.senthilvsh.saffron.stdlib.PrintString;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,20 @@ public class Validator {
     private FunctionDefinition functionUnderEvaluation = null;
 
     public Validator() {
+        // TODO: Below code is repeated in interpreter also. Have one place for defining native functions.
+        List<NativeFunction> nativeFunctions = new ArrayList<>();
+        nativeFunctions.add(new PrintString());
+
+        for (NativeFunction nf : nativeFunctions) {
+            String signature = nf.getName();
+            String argTypes = nf.getArguments().stream().map(a -> a.getType().getName().toLowerCase()).collect(Collectors.joining("_"));
+            if (!argTypes.isEmpty()) {
+                signature += ("_" + argTypes);
+            }
+            // TODO: Check redefinition (not likely, but still...)
+            functions.put(signature, new NativeFunctionDefinition(nf.getName(), nf.getArguments(), nf.getReturnType(), nf));
+        }
+
         stack.push(new Frame());
     }
 
