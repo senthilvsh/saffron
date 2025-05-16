@@ -3,6 +3,7 @@ package org.senthilvsh.saffron.common;
 import java.util.Objects;
 
 public class Type {
+    public static final Type VOID = new Type("void");
     public static final Type NUMBER = new Type("number");
     public static final Type STRING = new Type("string");
     public static final Type BOOLEAN = new Type("boolean");
@@ -36,6 +37,7 @@ public class Type {
 
     public static Type of(String name) {
         return switch (name) {
+            case "void" -> VOID;
             case "num" -> NUMBER;
             case "str" -> STRING;
             case "bool" -> BOOLEAN;

@@ -70,6 +70,10 @@ public class Interpreter {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
+            if (Type.of(vds.getType()) == Type.VOID) {
+                throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
+                        vds.getPosition(), vds.getLength());
+            }
             Variable v = new Variable(name, Type.of(vds.getType()), null);
             variables.put(name, v);
         }

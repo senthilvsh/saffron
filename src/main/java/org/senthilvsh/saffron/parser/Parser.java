@@ -1,13 +1,14 @@
 package org.senthilvsh.saffron.parser;
 
 import org.senthilvsh.saffron.ast.*;
+import org.senthilvsh.saffron.common.Type;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.senthilvsh.saffron.parser.TokenType.COMMENT;
+import static org.senthilvsh.saffron.parser.TokenType.*;
 
 public class Parser {
     private final List<ParseError> errors = new ArrayList<>();
@@ -61,12 +62,58 @@ public class Parser {
                     varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
         }
 
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("fun")) {
+            Token funKeyword = consume(TokenType.KEYWORD, new String[]{"fun"});
+            Token functionName = consume(TokenType.IDENTIFIER);
+
+            consume(TokenType.SYMBOL, new String[]{"("});
+
+            List<FunctionArgument> arguments = new ArrayList<>();
+
+            assertLookAheadNotNull();
+            while (!lookahead.getValue().equals(")")) {
+                Token argName = consume(IDENTIFIER);
+                consume(SYMBOL, new String[]{":"});
+                Token type = consume(KEYWORD, new String[]{"num", "str", "bool"});
+                arguments.add(new FunctionArgument(argName.getValue(), Type.of(type.getValue())));
+                if (!lookahead.getValue().equals(",")) {
+                    break;
+                }
+                consume(SYMBOL, new String[]{","});
+            }
+
+            consume(TokenType.SYMBOL, new String[]{")"});
+            consume(TokenType.SYMBOL, new String[]{":"});
+            Token returnType = consume(KEYWORD, new String[]{"void", "num", "str", "bool"});
+
+            BlockStatement body = blockStatement();
+
+            return new FunctionDefinition(
+                    functionName.getValue(),
+                    arguments,
+                    body,
+                    Type.of(returnType.getValue()),
+                    funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition());
+        }
+
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("print")) {
             Token printKeyword = consume(TokenType.KEYWORD, new String[]{"print"});
             Expression expression = expression();
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
             return new PrintStatement(expression, printKeyword.getPosition(),
                     semicolon.getPosition() + semicolon.getLength() - printKeyword.getPosition());
+        }
+
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("return")) {
+            Token returnKeyword = consume(TokenType.KEYWORD, new String[]{"return"});
+            Expression expression = null;
+            assertLookAheadNotNull();
+            if (!lookahead.getValue().equals(";")) {
+                expression = expression();
+            }
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new ReturnStatement(expression, returnKeyword.getPosition(),
+                    semicolon.getPosition() + semicolon.getLength() - returnKeyword.getPosition());
         }
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("if")) {
@@ -128,23 +175,27 @@ public class Parser {
         }
 
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("{")) {
-            Token open = consume(TokenType.SYMBOL, new String[]{"{"});
-            List<Statement> statements = new ArrayList<>();
-            while (!lookahead.getValue().equals("}")) {
-                statements.add(statement());
-            }
-            Token close = consume(TokenType.SYMBOL, new String[]{"}"});
-            return new BlockStatement(
-                    statements,
-                    open.getPosition(),
-                    close.getPosition() + close.getLength() - open.getPosition()
-            );
+            return blockStatement();
         }
 
         Expression expression = expression();
         Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
         return new ExpressionStatement(expression, expression.getPosition(),
                 semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
+    }
+
+    BlockStatement blockStatement() throws ParseError {
+        Token open = consume(TokenType.SYMBOL, new String[]{"{"});
+        List<Statement> statements = new ArrayList<>();
+        while (!lookahead.getValue().equals("}")) {
+            statements.add(statement());
+        }
+        Token close = consume(TokenType.SYMBOL, new String[]{"}"});
+        return new BlockStatement(
+                statements,
+                open.getPosition(),
+                close.getPosition() + close.getLength() - open.getPosition()
+        );
     }
 
     Expression expression() throws ParseError {

@@ -1,0 +1,7 @@
+fun add():void {
+    return a + b;
+}
+
+var a:num;
+
+a = 10;

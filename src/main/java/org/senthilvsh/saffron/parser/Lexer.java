@@ -9,7 +9,7 @@ public class Lexer {
     private static final Pattern STRING_PATTERN = Pattern.compile("((\")([^\"]*)(\"))([\\s\\S]*)");
     private static final Pattern BOOLEAN_PATTERN = Pattern.compile("(true|false)([\\s\\S]*)");
     private static final Pattern OPERATOR_PATTERN = Pattern.compile("(&&|\\|\\||>=|<=|>|<|==|!=|=|\\+|-|\\*|/|%|!)([\\s\\S]*)");
-    private static final Pattern SYMBOL_PATTERN = Pattern.compile("([{}();:])([\\s\\S]*)");
+    private static final Pattern SYMBOL_PATTERN = Pattern.compile("([{}();:,])([\\s\\S]*)");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("(([_a-zA-Z]+)([_a-zA-Z0-9]*))([\\s\\S]*)");
     private static final Pattern SINGLE_LINE_COMMENT_PATTERN = Pattern.compile("((//)([^\\n]*)(\\n))([\\s\\S]*)");
     private static final Pattern MULTI_LINE_COMMENT_START_PATTERN = Pattern.compile("(/\\*)([\\s\\S]*)");
@@ -135,6 +135,9 @@ public class Lexer {
                 "else".equals(identifier) ||
                 "while".equals(identifier) ||
                 "break".equals(identifier) ||
-                "continue".equals(identifier);
+                "continue".equals(identifier) ||
+                "fun".equals(identifier) ||
+                "void".equals(identifier) ||
+                "return".equals(identifier);
     }
 }

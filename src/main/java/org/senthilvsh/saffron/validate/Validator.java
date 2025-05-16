@@ -48,6 +48,10 @@ public class Validator {
             validate(wl.getBody());
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
+            if (Type.of(vds.getType()) == Type.VOID) {
+                throw new ValidationError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
+                        vds.getPosition(), vds.getLength());
+            }
             if (variableTypes.containsKey(name)) {
                 throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
