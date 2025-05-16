@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Implement a 'readln' native function.
+    // TODO: Implement variable initialization
     // TODO: Add user guide to readme
     // TODO: Add sample programs folder
     // TODO: Check usage of VOID types in expressions

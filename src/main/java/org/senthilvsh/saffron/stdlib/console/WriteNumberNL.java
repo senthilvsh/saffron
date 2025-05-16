@@ -1,14 +1,15 @@
-package org.senthilvsh.saffron.stdlib;
+package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.FunctionReturn;
 import org.senthilvsh.saffron.runtime.NumberObj;
+import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
 
-public class WriteLineNumber implements NativeFunction {
+public class WriteNumberNL implements NativeFunction {
     @Override
     public String getName() {
         return "writeln";

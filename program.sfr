@@ -1,11 +1,11 @@
 var a:num;
 var b:num;
 
-a = 100;
-b = 100;
+a = 20;
+b = 50;
 
-var x:str;
-x = "senthil";
+writeln("a is " + a);
+writeln("b is " + b);
 
 if (a < b)
     writeln("a < b");
@@ -14,14 +14,13 @@ else if(a > b)
 else
     writeln("a == b");
 
+
 fun add(a:num, b:num):num {
     return a + b;
 }
 
 writeln("Sum of 10 and 20 is: " + add(10, 20));
 
-writeln(a);
-writeln(b);
 
 fun sum(a:num):num {
     if (a < 1) {
@@ -31,3 +30,11 @@ fun sum(a:num):num {
 }
 
 writeln("Sum of numbers from 1 to 15 is: " + sum(15));
+
+
+var user:str;
+
+write("Enter user name: ");
+user = readln();
+
+writeln("Hi " + user + "!");

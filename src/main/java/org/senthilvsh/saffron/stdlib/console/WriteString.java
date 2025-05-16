@@ -1,17 +1,18 @@
-package org.senthilvsh.saffron.stdlib;
+package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.FunctionReturn;
 import org.senthilvsh.saffron.runtime.StringObj;
+import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
 
-public class WriteLineString implements NativeFunction {
+public class WriteString implements NativeFunction {
     @Override
     public String getName() {
-        return "writeln";
+        return "write";
     }
 
     @Override
@@ -27,6 +28,6 @@ public class WriteLineString implements NativeFunction {
     @Override
     public void run(Frame frame) throws FunctionReturn {
         StringObj baseObj = (StringObj) frame.get("value").getValue();
-        System.out.println(baseObj.getValue());
+        System.out.print(baseObj.getValue());
     }
 }

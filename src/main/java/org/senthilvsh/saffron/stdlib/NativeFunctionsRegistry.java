@@ -1,6 +1,7 @@
 package org.senthilvsh.saffron.stdlib;
 
 import org.senthilvsh.saffron.ast.NativeFunctionDefinition;
+import org.senthilvsh.saffron.stdlib.console.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +12,13 @@ import java.util.stream.Collectors;
 public class NativeFunctionsRegistry {
     public static Map<String, NativeFunctionDefinition> getAll() {
         List<NativeFunction> nativeFunctions = new ArrayList<>();
-        nativeFunctions.add(new WriteLineNumber());
-        nativeFunctions.add(new WriteLineString());
-        nativeFunctions.add(new WriteLineBoolean());
+        nativeFunctions.add(new WriteNumber());
+        nativeFunctions.add(new WriteString());
+        nativeFunctions.add(new WriteBoolean());
+        nativeFunctions.add(new WriteNumberNL());
+        nativeFunctions.add(new WriteStringNL());
+        nativeFunctions.add(new WriteBooleanNL());
+        nativeFunctions.add(new ReadLine());
 
         Map<String, NativeFunctionDefinition> definitions = new HashMap<>();
 
