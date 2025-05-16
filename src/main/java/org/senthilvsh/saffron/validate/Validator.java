@@ -6,6 +6,7 @@ import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,23 @@ public class Validator {
                         identifier.getPosition(), identifier.getLength());
             }
             return frame.get(identifier.getName()).getType();
+        }
+        if (expression instanceof FunctionCallExpression call) {
+            String name = call.getName();
+            String signature = name;
+            List<String> argTypes = new ArrayList<>();
+            for (Expression e : call.getArguments()) {
+                argTypes.add(getType(e).getName().toLowerCase());
+            }
+            if (!argTypes.isEmpty()) {
+                signature += "_" + String.join("_", argTypes);
+            }
+            if (!functions.containsKey(signature)) {
+                throw new ValidationError(
+                        String.format("Undeclared function %s(%s)", name, String.join(",", argTypes)),
+                        call.getPosition(), call.getLength());
+            }
+            return functions.get(signature).getReturnType();
         }
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();
