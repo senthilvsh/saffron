@@ -122,7 +122,7 @@ public class Parser {
     Expression assignmentExpression() throws ParseError {
         assertLookAheadNotNull();
 
-        Expression left = equalityExpression();
+        Expression left = logicalExpression();
 
         if (lookahead == null || !lookahead.getValue().equals("=")) {
             return left;
@@ -132,13 +132,36 @@ public class Parser {
 
         assertLookAheadNotNull();
 
-        Expression right = equalityExpression();
+        Expression right = logicalExpression();
 
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
         // TODO: Dedicated class for assignment expression
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    Expression logicalExpression() throws ParseError {
+        Expression left = equalityExpression();
+
+        if (lookahead == null || !isLogicalOperator(lookahead.getValue())) {
+            return left;
+        }
+
+        Token operator = consume(TokenType.OPERATOR, new String[]{"&&", "||"});
+
+        assertLookAheadNotNull();
+
+        Expression right = equalityExpression();
+
+        int position = left.getPosition();
+        int length = (right.getPosition() + right.getLength()) - left.getPosition();
+
+        return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
+    }
+
+    private boolean isLogicalOperator(String operator) {
+        return "&&".equals(operator) || "||".equals(operator);
     }
 
     Expression equalityExpression() throws ParseError {

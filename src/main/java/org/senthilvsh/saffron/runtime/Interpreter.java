@@ -140,6 +140,12 @@ public class Interpreter {
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
                 }
+                if ("&&".equals(operator)) {
+                    return logicalAnd(left, right);
+                }
+                if ("||".equals(operator)) {
+                    return logicalOr(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new RuntimeError(String.format("Cannot perform operation '%s' on %s and %s", operator,
                         left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -247,6 +253,24 @@ public class Interpreter {
             }
         }
         // Types of left and right are different
+        throw new RuntimeException();
+    }
+
+    BaseObj logicalAnd(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
+            BooleanObj leftBoolean = (BooleanObj) left;
+            BooleanObj rightBoolean = (BooleanObj) right;
+            return new BooleanObj(leftBoolean.getValue() && rightBoolean.getValue());
+        }
+        throw new RuntimeException();
+    }
+
+    BaseObj logicalOr(BaseObj left, BaseObj right) {
+        if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
+            BooleanObj leftBoolean = (BooleanObj) left;
+            BooleanObj rightBoolean = (BooleanObj) right;
+            return new BooleanObj(leftBoolean.getValue() || rightBoolean.getValue());
+        }
         throw new RuntimeException();
     }
 

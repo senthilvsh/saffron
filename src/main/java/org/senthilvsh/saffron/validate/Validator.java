@@ -122,6 +122,12 @@ public class Validator {
                 if ("!=".equals(operator)) {
                     return notEqual(left, right);
                 }
+                if ("&&".equals(operator)) {
+                    return logicalAnd(left, right);
+                }
+                if ("||".equals(operator)) {
+                    return logicalOr(left, right);
+                }
             } catch (RuntimeException ex) {
                 throw new ValidationError(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
@@ -213,6 +219,20 @@ public class Validator {
      */
     Type notEqual(Type left, Type right) {
         if (left == right && (left == Type.NUMBER || left == Type.BOOLEAN || left == Type.STRING)) {
+            return Type.BOOLEAN;
+        }
+        throw new RuntimeException();
+    }
+
+    Type logicalAnd(Type left, Type right) {
+        if (left == Type.BOOLEAN && right == Type.BOOLEAN) {
+            return Type.BOOLEAN;
+        }
+        throw new RuntimeException();
+    }
+
+    Type logicalOr(Type left, Type right) {
+        if (left == Type.BOOLEAN && right == Type.BOOLEAN) {
             return Type.BOOLEAN;
         }
         throw new RuntimeException();

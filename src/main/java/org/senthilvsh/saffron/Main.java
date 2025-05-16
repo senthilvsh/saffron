@@ -17,10 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Add support for single-line comments
-    // TODO: Add support for multi-line comments
-    // TODO: Implement logical && operator
-    // TODO: Implement logical || operator
     // TODO: Implement logical ! operator
     // TODO: Implement while loop
     // TODO: Implement function calls
