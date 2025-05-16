@@ -26,6 +26,20 @@ public class Validator {
             for (Statement s : statements) {
                 validate(s);
             }
+        } else if (statement instanceof PrintStatement ps) {
+            Expression expression = ps.getExpression();
+            getType(expression);
+        } else if (statement instanceof ConditionalStatement cs) {
+            Expression condition = cs.getCondition();
+            Type conditionType = getType(condition);
+            if (conditionType != Type.BOOLEAN) {
+                throw new ValidationError("The condition of an 'if' statement must be a boolean expression",
+                        condition.getPosition(), condition.getLength());
+            }
+            validate(cs.getTrueClause());
+            if (cs.getFalseClause() != null) {
+                validate(cs.getFalseClause());
+            }
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variableTypes.containsKey(name)) {
@@ -162,28 +176,28 @@ public class Validator {
 
     Type greaterThan(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
-            return Type.NUMBER;
+            return Type.BOOLEAN;
         }
         throw new RuntimeException();
     }
 
     Type greaterThanOrEqual(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
-            return Type.NUMBER;
+            return Type.BOOLEAN;
         }
         throw new RuntimeException();
     }
 
     Type lessThan(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
-            return Type.NUMBER;
+            return Type.BOOLEAN;
         }
         throw new RuntimeException();
     }
 
     Type lessThanOrEqual(Type left, Type right) {
         if (left == Type.NUMBER && right == Type.NUMBER) {
-            return Type.NUMBER;
+            return Type.BOOLEAN;
         }
         throw new RuntimeException();
     }

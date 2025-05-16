@@ -99,6 +99,8 @@ public class Lexer {
                 "num".equals(identifier) ||
                 "str".equals(identifier) ||
                 "bool".equals(identifier) ||
-                "print".equals(identifier);
+                "print".equals(identifier) ||
+                "if".equals(identifier) ||
+                "else".equals(identifier);
     }
 }

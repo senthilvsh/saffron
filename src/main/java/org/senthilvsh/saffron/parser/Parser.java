@@ -34,7 +34,8 @@ public class Parser {
                 statements.add(statement());
             } catch (ParseError e) {
                 errors.add(e);
-                while (!lookahead.getValue().equals(";")) {
+                // TODO: Find end of block statements also
+                while (lookahead != null && !lookahead.getValue().equals(";")) {
                     consume();
                 }
                 consume(TokenType.SYMBOL, new String[]{";"});
@@ -62,6 +63,32 @@ public class Parser {
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
             return new PrintStatement(expression, printKeyword.getPosition(),
                     semicolon.getPosition() + semicolon.getLength() - printKeyword.getPosition());
+        }
+
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("if")) {
+            Token ifKeyword = consume(TokenType.KEYWORD, new String[]{"if"});
+            consume(TokenType.SYMBOL, new String[]{"("});
+            Expression condition = equalityExpression();
+            consume(TokenType.SYMBOL, new String[]{")"});
+            Statement trueClause = statement();
+            if (lookahead == null || !(lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("else"))) {
+                return new ConditionalStatement(
+                        condition,
+                        trueClause,
+                        null,
+                        ifKeyword.getPosition(),
+                        trueClause.getPosition() + trueClause.getLength() - ifKeyword.getPosition()
+                );
+            }
+            consume(TokenType.KEYWORD, new String[]{"else"});
+            Statement falseClause = statement();
+            return new ConditionalStatement(
+                    condition,
+                    trueClause,
+                    falseClause,
+                    ifKeyword.getPosition(),
+                    falseClause.getPosition() + falseClause.getLength() - ifKeyword.getPosition()
+            );
         }
 
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("{")) {

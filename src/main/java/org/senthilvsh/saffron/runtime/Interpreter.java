@@ -27,6 +27,21 @@ public class Interpreter {
         } else if (statement instanceof PrintStatement ps) {
             BaseObj result = evaluate(ps.getExpression());
             System.out.println(stringValue(result));
+        } else if (statement instanceof ConditionalStatement cs) {
+            Expression condition = cs.getCondition();
+            BaseObj baseObj = evaluate(condition);
+            if (baseObj.getType() != Type.BOOLEAN) {
+                throw new RuntimeError("The condition of an 'if' statement must be a boolean expression",
+                        condition.getPosition(), condition.getLength());
+            }
+            BooleanObj conditionResult = (BooleanObj) baseObj;
+            if (conditionResult.getValue()) {
+                execute(cs.getTrueClause());
+            } else {
+                if (cs.getFalseClause() != null) {
+                    execute(cs.getFalseClause());
+                }
+            }
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variables.containsKey(name)) {
