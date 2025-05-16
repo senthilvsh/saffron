@@ -6,6 +6,7 @@ import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,14 @@ public class Interpreter {
         } else if (statement instanceof PrintStatement ps) {
             BaseObj result = evaluate(ps.getExpression());
             System.out.println(stringValue(result));
+        } else if (statement instanceof ReturnStatement rs) {
+            Expression expression = rs.getExpression();
+            BaseObj returnValue = null;
+            if (expression != null) {
+                returnValue = evaluate(expression);
+            }
+            // TODO: Check whether computed return value matches the function definition's return value
+            throw new FunctionReturn(returnValue);
         } else if (statement instanceof ConditionalStatement cs) {
             Expression condition = cs.getCondition();
             BaseObj baseObj = evaluate(condition);
@@ -127,6 +136,43 @@ public class Interpreter {
                         i.getPosition(), i.getLength());
             }
             return variable.getValue();
+        }
+        if (expression instanceof FunctionCallExpression call) {
+            String name = call.getName();
+            String signature = name;
+            List<BaseObj> args = new ArrayList<>();
+            for (Expression e : call.getArguments()) {
+                args.add(evaluate(e));
+            }
+            List<String> argTypes = args.stream().map(a -> a.getType().getName().toLowerCase()).toList();
+            if (!argTypes.isEmpty()) {
+                signature += "_" + String.join("_", argTypes);
+            }
+            if (!functions.containsKey(signature)) {
+                throw new RuntimeError(
+                        String.format("Undeclared function %s(%s)", name, String.join(",", argTypes)),
+                        call.getPosition(), call.getLength());
+            }
+            FunctionDefinition fd = functions.get(signature);
+            try {
+                stack.newFrame();
+                Frame frame = stack.peek();
+                var arguments = fd.getArguments();
+                for (int i = 0; i < arguments.size(); i++) {
+                    frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), true));
+                }
+                functionUnderEvaluation = fd;
+
+                execute(functions.get(signature).getBody());
+
+                functionUnderEvaluation = null;
+                stack.pop();
+                return null;
+            } catch (FunctionReturn e) {
+                functionUnderEvaluation = null;
+                stack.pop();
+                return e.getReturnValue();
+            }
         }
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();

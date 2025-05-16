@@ -17,11 +17,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Implement function calls
-    // TODO: Convert print statement to function call
-    // TODO: Implement a 'scan' function.
+    // TODO: Support native functions
+    // TODO: Convert print statement to native function call
+    // TODO: Implement a 'scan' native function.
     // TODO: Add user guide to readme
     // TODO: Add sample programs folder
+    // TODO: Check usage of VOID types in expressions
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Usage: saffron <input>");

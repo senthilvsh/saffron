@@ -40,7 +40,10 @@ public class Validator {
             }
         } else if (statement instanceof PrintStatement ps) {
             Expression expression = ps.getExpression();
-            getType(expression);
+            Type type = getType(expression);
+            if (type == VOID) {
+                throw new ValidationError("Cannot print value of type VOID", expression.getPosition(), expression.getLength());
+            }
         } else if (statement instanceof ReturnStatement rs) {
             Expression expression = rs.getExpression();
             Type type = VOID;
