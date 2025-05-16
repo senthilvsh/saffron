@@ -9,8 +9,6 @@ import java.util.Map;
 
 public class Validator {
     private final Map<String, Type> variableTypes = new HashMap<>();
-    // TODO: Remove assignment status checks. It is not possible to do it at compile time.
-    private final Map<String, Boolean> variableAssignmentStatus = new HashMap<>();
 
     public void validate(Program program) throws ValidationError {
         for (Statement s : program.getStatements()) {
@@ -62,10 +60,6 @@ public class Validator {
         if (expression instanceof Identifier identifier) {
             if (!variableTypes.containsKey(identifier.getName())) {
                 throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
-                        identifier.getPosition(), identifier.getLength());
-            }
-            if (!variableAssignmentStatus.containsKey(identifier.getName())) {
-                throw new ValidationError(String.format("Variable '%s' is used before being assigned", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
             return variableTypes.get(identifier.getName());
@@ -236,7 +230,6 @@ public class Validator {
         Type variableType = variableTypes.get(identifier.getName());
         Type right = getType(binaryExpression.getRight());
         if (variableType == right) {
-            variableAssignmentStatus.put(identifier.getName(), true);
             return right;
         }
         throw new ValidationError(String.format("Cannot assign value of type '%s' to variable of type '%s'",

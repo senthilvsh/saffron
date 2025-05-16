@@ -11,6 +11,9 @@ public class Lexer {
     private static final Pattern OPERATOR_PATTERN = Pattern.compile("(>=|<=|>|<|==|!=|=|\\+|-|\\*|/|%)([\\s\\S]*)");
     private static final Pattern SYMBOL_PATTERN = Pattern.compile("([{}();:])([\\s\\S]*)");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("(([_a-zA-Z]+)([_a-zA-Z0-9]*))([\\s\\S]*)");
+    private static final Pattern SINGLE_LINE_COMMENT_PATTERN = Pattern.compile("((//)([^\\n]*)(\\n))([\\s\\S]*)");
+    private static final Pattern MULTI_LINE_COMMENT_START_PATTERN = Pattern.compile("(/\\*)([\\s\\S]*)");
+    private static final Pattern MULTI_LINE_COMMENT_END_PATTERN = Pattern.compile("(\\*/)([\\s\\S]*)");
 
     private final String source;
 
@@ -33,6 +36,34 @@ public class Lexer {
             String match = m.group(1);
             position += match.length();
             return next();
+        }
+
+        m = SINGLE_LINE_COMMENT_PATTERN.matcher(source.substring(position));
+        if (m.matches()) {
+            String match = m.group(1);
+            position += match.length();
+            return next();
+        }
+
+        m = MULTI_LINE_COMMENT_START_PATTERN.matcher(source.substring(position));
+        if (m.matches()) {
+            int startPosition = position;
+            String comment = m.group(1);
+            position += comment.length();
+            m = MULTI_LINE_COMMENT_END_PATTERN.matcher(source.substring(position));
+            while (!m.matches()) {
+                comment += source.charAt(position);
+                position++;
+                if (position >= source.length()) {
+                    break;
+                }
+                m = MULTI_LINE_COMMENT_END_PATTERN.matcher(source.substring(position));
+            }
+            if (m.matches()) {
+                comment += m.group(1);
+                position += m.group(1).length();
+            }
+            return new Token(TokenType.COMMENT, comment, startPosition);
         }
 
         m = NUMBER_PATTERN.matcher(source.substring(position));

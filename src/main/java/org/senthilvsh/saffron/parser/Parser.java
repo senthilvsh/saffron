@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.senthilvsh.saffron.parser.TokenType.COMMENT;
+
 public class Parser {
     private final List<ParseError> errors = new ArrayList<>();
     private final List<Token> tokens = new ArrayList<>();
@@ -18,7 +20,9 @@ public class Parser {
 
         Token token = lexer.next();
         while (token != null) {
-            tokens.add(token);
+            if (token.getType() != COMMENT) {
+                tokens.add(token);
+            }
             token = lexer.next();
         }
 
