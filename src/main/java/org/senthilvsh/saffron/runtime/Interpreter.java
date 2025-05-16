@@ -42,6 +42,28 @@ public class Interpreter {
                     execute(cs.getFalseClause());
                 }
             }
+        } else if (statement instanceof WhileLoop wl) {
+            Expression condition = wl.getCondition();
+            BaseObj baseObj = evaluate(condition);
+            if (baseObj.getType() != Type.BOOLEAN) {
+                throw new RuntimeError("The condition of a 'while' loop must be a boolean expression",
+                        condition.getPosition(), condition.getLength());
+            }
+            BooleanObj conditionResult = (BooleanObj) baseObj;
+            try {
+                while (conditionResult.getValue()) {
+                    try {
+                        execute(wl.getBody());
+                    } catch (ContinueLoop e) {
+                        // Next iteration
+                    }
+                    conditionResult = (BooleanObj) evaluate(condition);
+                }
+            } catch (BreakLoop e) {
+                // Break out of loop
+            }
+        } else if (statement instanceof BreakStatement) {
+            throw new BreakLoop();
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variables.containsKey(name)) {

@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Implement while loop
     // TODO: Implement function calls
     // TODO: Convert print statement to function call
     // TODO: Implement a 'scan' function.

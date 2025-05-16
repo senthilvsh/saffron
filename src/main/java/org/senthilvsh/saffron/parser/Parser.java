@@ -95,6 +95,38 @@ public class Parser {
             );
         }
 
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("while")) {
+            Token whileKeyword = consume(TokenType.KEYWORD, new String[]{"while"});
+            consume(TokenType.SYMBOL, new String[]{"("});
+            Expression condition = equalityExpression();
+            consume(TokenType.SYMBOL, new String[]{")"});
+            Statement loopBody = statement();
+            return new WhileLoop(
+                    condition,
+                    loopBody,
+                    whileKeyword.getPosition(),
+                    loopBody.getPosition() + loopBody.getLength() - whileKeyword.getPosition()
+            );
+        }
+
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("continue")) {
+            Token continueKeyword = consume(TokenType.KEYWORD, new String[]{"continue"});
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new ContinueStatement(
+                    continueKeyword.getPosition(),
+                    semicolon.getPosition() + semicolon.getLength() - continueKeyword.getPosition()
+            );
+        }
+
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("break")) {
+            Token breakKeyword = consume(TokenType.KEYWORD, new String[]{"break"});
+            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+            return new BreakStatement(
+                    breakKeyword.getPosition(),
+                    semicolon.getPosition() + semicolon.getLength() - breakKeyword.getPosition()
+            );
+        }
+
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("{")) {
             Token open = consume(TokenType.SYMBOL, new String[]{"{"});
             List<Statement> statements = new ArrayList<>();

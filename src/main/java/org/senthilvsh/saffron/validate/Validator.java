@@ -38,6 +38,14 @@ public class Validator {
             if (cs.getFalseClause() != null) {
                 validate(cs.getFalseClause());
             }
+        } else if (statement instanceof WhileLoop wl) {
+            Expression condition = wl.getCondition();
+            Type conditionType = getType(condition);
+            if (conditionType != Type.BOOLEAN) {
+                throw new ValidationError("The condition of a 'while' loop must be a boolean expression",
+                        condition.getPosition(), condition.getLength());
+            }
+            validate(wl.getBody());
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variableTypes.containsKey(name)) {

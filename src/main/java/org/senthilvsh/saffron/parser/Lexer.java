@@ -132,6 +132,9 @@ public class Lexer {
                 "bool".equals(identifier) ||
                 "print".equals(identifier) ||
                 "if".equals(identifier) ||
-                "else".equals(identifier);
+                "else".equals(identifier) ||
+                "while".equals(identifier) ||
+                "break".equals(identifier) ||
+                "continue".equals(identifier);
     }
 }
