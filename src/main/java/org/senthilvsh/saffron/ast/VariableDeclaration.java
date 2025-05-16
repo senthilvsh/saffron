@@ -1,10 +1,10 @@
 package org.senthilvsh.saffron.ast;
 
-public class VariableDeclarationStatement extends Statement {
+public class VariableDeclaration extends Statement {
     private final String name;
     private final String type;
 
-    public VariableDeclarationStatement(String name, String type, int position, int length) {
+    public VariableDeclaration(String name, String type, int position, int length) {
         super(position, length);
         this.name = name;
         this.type = type;

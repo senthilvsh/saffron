@@ -4,27 +4,33 @@ import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.common.Type;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Interpreter {
     private final Map<String, Variable> variables = new HashMap<>();
 
-    public void execute(Program program) throws InterpreterException {
+    public void execute(Program program) throws RuntimeError {
         for (Statement s : program.getStatements()) {
             execute(s);
         }
     }
 
-    private void execute(Statement statement) throws InterpreterException {
+    private void execute(Statement statement) throws RuntimeError {
         if (statement instanceof ExpressionStatement es) {
             evaluate(es.getExpression());
+        } else if (statement instanceof BlockStatement bs) {
+            List<Statement> statements = bs.getStatements();
+            for (Statement s : statements) {
+                execute(s);
+            }
         } else if (statement instanceof PrintStatement ps) {
             BaseObj result = evaluate(ps.getExpression());
             System.out.println(stringValue(result));
-        } else if (statement instanceof VariableDeclarationStatement vds) {
+        } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variables.containsKey(name)) {
-                throw new InterpreterException(String.format("Re-declaration of variable '%s'", name),
+                throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
             Variable v = new Variable(name, Type.of(vds.getType()), null);
@@ -32,7 +38,7 @@ public class Interpreter {
         }
     }
 
-    public BaseObj evaluate(Expression expression) throws InterpreterException {
+    public BaseObj evaluate(Expression expression) throws RuntimeError {
         if (expression instanceof NumberLiteral n) {
             return new NumberObj(n.getValue());
         }
@@ -44,12 +50,12 @@ public class Interpreter {
         }
         if (expression instanceof Identifier i) {
             if (!variables.containsKey(i.getName())) {
-                throw new InterpreterException(String.format("Undefined variable '%s'", i.getName()),
+                throw new RuntimeError(String.format("Undefined variable '%s'", i.getName()),
                         i.getPosition(), i.getLength());
             }
             Variable variable = variables.get(i.getName());
             if (variable.getValue() == null) {
-                throw new InterpreterException(String.format("Variable '%s' is used before being assigned", i.getName()),
+                throw new RuntimeError(String.format("Variable '%s' is used before being assigned", i.getName()),
                         i.getPosition(), i.getLength());
             }
             return variable.getValue();
@@ -60,7 +66,7 @@ public class Interpreter {
             BaseObj baseObj = evaluate(operand);
             if ("+-".contains(operator)) {
                 if (baseObj.getType() != Type.NUMBER) {
-                    throw new InterpreterException(
+                    throw new RuntimeError(
                             String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getType().getName()),
                             unaryExpression.getOperatorPosition(),
                             unaryExpression.getOperatorLength()
@@ -120,11 +126,11 @@ public class Interpreter {
                     return notEqual(left, right);
                 }
             } catch (RuntimeException ex) {
-                throw new InterpreterException(String.format("Cannot perform operation '%s' on %s and %s", operator,
+                throw new RuntimeError(String.format("Cannot perform operation '%s' on %s and %s", operator,
                         left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
-        throw new InterpreterException("Unknown expression type", expression.getPosition(), expression.getLength());
+        throw new RuntimeError("Unknown expression type", expression.getPosition(), expression.getLength());
     }
 
     BaseObj add(BaseObj left, BaseObj right) {
@@ -229,15 +235,15 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj assign(BinaryExpression binaryExpression) throws InterpreterException {
+    BaseObj assign(BinaryExpression binaryExpression) throws RuntimeError {
         String variableName = getVariableName(binaryExpression);
 
         BaseObj right = evaluate(binaryExpression.getRight());
 
         Variable variable = variables.get(variableName);
         if (variable.getType() != right.getType()) {
-            throw new InterpreterException(String.format("Cannot assign value of type '%s' to variable of type '%s'",
-                    right.getType(), variable.getType()),
+            throw new RuntimeError(String.format("Cannot assign value of type '%s' to variable of type '%s'",
+                    right.getType().getName(), variable.getType().getName()),
                     binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
         }
 
@@ -258,16 +264,16 @@ public class Interpreter {
         return newObj;
     }
 
-    private String getVariableName(BinaryExpression binaryExpression) throws InterpreterException {
+    private String getVariableName(BinaryExpression binaryExpression) throws RuntimeError {
         Expression left = binaryExpression.getLeft();
 
         if (!(left instanceof Identifier identifier)) {
-            throw new InterpreterException("Left side of assignment must be a variable", left.getPosition(), left.getLength());
+            throw new RuntimeError("Left side of assignment must be a variable", left.getPosition(), left.getLength());
         }
 
         String variableName = identifier.getName();
         if (!variables.containsKey(variableName)) {
-            throw new InterpreterException(String.format("Undeclared variable '%s'", identifier.getName()),
+            throw new RuntimeError(String.format("Undeclared variable '%s'", identifier.getName()),
                     left.getPosition(), left.getLength());
         }
         return variableName;

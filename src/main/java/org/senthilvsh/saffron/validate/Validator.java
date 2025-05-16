@@ -4,6 +4,7 @@ import org.senthilvsh.saffron.ast.*;
 import org.senthilvsh.saffron.common.Type;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Validator {
@@ -11,25 +12,30 @@ public class Validator {
     private final Map<String, Type> variableTypes = new HashMap<>();
     private final Map<String, Boolean> variableAssignmentStatus = new HashMap<>();
 
-    public void validate(Program program) throws ValidatorException {
+    public void validate(Program program) throws ValidationError {
         for (Statement s : program.getStatements()) {
             validate(s);
         }
     }
 
-    private void validate(Statement statement) throws ValidatorException {
+    private void validate(Statement statement) throws ValidationError {
         if (statement instanceof ExpressionStatement es) {
             getType(es.getExpression());
-        } else if (statement instanceof VariableDeclarationStatement vds) {
+        } else if (statement instanceof BlockStatement bs) {
+            List<Statement> statements = bs.getStatements();
+            for (Statement s : statements) {
+                validate(s);
+            }
+        } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             if (variableTypes.containsKey(name)) {
-                throw new ValidatorException(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
+                throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
             variableTypes.put(name, Type.of(vds.getType()));
         }
     }
 
-    public Type getType(Expression expression) throws ValidatorException {
+    public Type getType(Expression expression) throws ValidationError {
         if (expression instanceof NumberLiteral) {
             return Type.NUMBER;
         }
@@ -41,11 +47,11 @@ public class Validator {
         }
         if (expression instanceof Identifier identifier) {
             if (!variableTypes.containsKey(identifier.getName())) {
-                throw new ValidatorException(String.format("Undeclared variable '%s'", identifier.getName()),
+                throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
             if (!variableAssignmentStatus.containsKey(identifier.getName())) {
-                throw new ValidatorException(String.format("Variable '%s' is used before being assigned", identifier.getName()),
+                throw new ValidationError(String.format("Variable '%s' is used before being assigned", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
             return variableTypes.get(identifier.getName());
@@ -56,7 +62,7 @@ public class Validator {
             Type operandType = getType(operand);
             if ("+-".contains(operator)) {
                 if (operandType != Type.NUMBER) {
-                    throw new ValidatorException(
+                    throw new ValidationError(
                             String.format("Operation '%s' cannot be applied to '%s'", operator, operandType.getName()),
                             unaryExpression.getOperatorPosition(),
                             unaryExpression.getOperatorLength()
@@ -109,11 +115,11 @@ public class Validator {
                     return notEqual(left, right);
                 }
             } catch (RuntimeException ex) {
-                throw new ValidatorException(String.format("Cannot perform '%s' operation between %s and %s",
+                throw new ValidationError(String.format("Cannot perform '%s' operation between %s and %s",
                         operator, left.getName(), right.getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
-        throw new ValidatorException("Unknown expression type", expression.getPosition(), expression.getLength());
+        throw new ValidationError("Unknown expression type", expression.getPosition(), expression.getLength());
     }
 
     Type add(Type left, Type right) {
@@ -204,13 +210,13 @@ public class Validator {
         throw new RuntimeException();
     }
 
-    Type assign(BinaryExpression binaryExpression) throws ValidatorException {
+    Type assign(BinaryExpression binaryExpression) throws ValidationError {
         if (!(binaryExpression.getLeft() instanceof Identifier identifier)) {
-            throw new ValidatorException("Left side of assignment must be a variable",
+            throw new ValidationError("Left side of assignment must be a variable",
                     binaryExpression.getLeft().getPosition(), binaryExpression.getLeft().getLength());
         }
         if (!variableTypes.containsKey(identifier.getName())) {
-            throw new ValidatorException(String.format("Undeclared variable '%s'", identifier.getName()),
+            throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                     identifier.getPosition(), identifier.getLength());
         }
         Type variableType = variableTypes.get(identifier.getName());
@@ -219,7 +225,7 @@ public class Validator {
             variableAssignmentStatus.put(identifier.getName(), true);
             return right;
         }
-        throw new ValidatorException(String.format("Cannot assign value of type '%s' to variable of type '%s'",
+        throw new ValidationError(String.format("Cannot assign value of type '%s' to variable of type '%s'",
                 right.getName(), variableType.getName()),
                 binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
     }

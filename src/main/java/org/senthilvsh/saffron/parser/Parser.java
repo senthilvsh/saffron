@@ -52,21 +52,36 @@ public class Parser {
             consume(TokenType.SYMBOL, new String[]{":"});
             Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new VariableDeclarationStatement(variableName.getValue(), typeSpecifier.getValue(),
+            return new VariableDeclaration(variableName.getValue(), typeSpecifier.getValue(),
                     varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
         }
+
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("print")) {
             Token printKeyword = consume(TokenType.KEYWORD, new String[]{"print"});
             Expression expression = expression();
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
             return new PrintStatement(expression, printKeyword.getPosition(),
                     semicolon.getPosition() + semicolon.getLength() - printKeyword.getPosition());
-        } else {
-            Expression expression = expression();
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new ExpressionStatement(expression, expression.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
         }
+
+        if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("{")) {
+            Token open = consume(TokenType.SYMBOL, new String[]{"{"});
+            List<Statement> statements = new ArrayList<>();
+            while (!lookahead.getValue().equals("}")) {
+                statements.add(statement());
+            }
+            Token close = consume(TokenType.SYMBOL, new String[]{"}"});
+            return new BlockStatement(
+                    statements,
+                    open.getPosition(),
+                    close.getPosition() + close.getLength() - open.getPosition()
+            );
+        }
+
+        Expression expression = expression();
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+        return new ExpressionStatement(expression, expression.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
     }
 
     Expression expression() throws ParseError {
