@@ -17,10 +17,17 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Add user guide to readme
-    // TODO: Add sample programs folder
     // TODO: Add support for single-line comments
     // TODO: Add support for multi-line comments
+    // TODO: Implement logical && operator
+    // TODO: Implement logical || operator
+    // TODO: Implement logical ! operator
+    // TODO: Implement while loop
+    // TODO: Implement function calls
+    // TODO: Convert print statement to function call
+    // TODO: Implement a 'scan' function.
+    // TODO: Add user guide to readme
+    // TODO: Add sample programs folder
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Usage: saffron <input>");
@@ -66,12 +73,12 @@ public class Main {
         } else if (e instanceof RuntimeError) {
             message = "Runtime Error: " + message;
         }
-        // TODO: Print line number
         System.err.println(message + "\n");
         LineInfo lineInfo = getLine(source, position);
         if (lineInfo != null) {
-            System.err.println(lineInfo.line);
-            System.err.println(squiggly(lineInfo.position, length));
+            String lineNoStr = "[Line:" + lineInfo.lineNo + "]    ";
+            System.err.println(lineNoStr + lineInfo.line);
+            System.err.println(" ".repeat(lineNoStr.length()) + squiggly(lineInfo.position, length));
         }
         System.err.println();
     }
@@ -83,16 +90,17 @@ public class Main {
     private static LineInfo getLine(String source, int position) {
         List<String> lines = Arrays.stream(source.split("\n")).toList();
         int lineStart = 0;
-        for (String line : lines) {
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
             int lineEnd = lineStart + line.length();
             if (position >= lineStart && position <= lineEnd) {
-                return new LineInfo(line, position - lineStart, line.length());
+                return new LineInfo(line, i + 1, position - lineStart, line.length());
             }
             lineStart = lineEnd + 1;
         }
         return null;
     }
 
-    private record LineInfo(String line, int position, int length) {
+    private record LineInfo(String line, int lineNo, int position, int length) {
     }
 }

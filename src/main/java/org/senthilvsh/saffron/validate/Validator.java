@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Validator {
-    // TODO: Create classes to encapsulate type-checking information
     private final Map<String, Type> variableTypes = new HashMap<>();
+    // TODO: Remove assignment status checks. It is not possible to do it at compile time.
     private final Map<String, Boolean> variableAssignmentStatus = new HashMap<>();
 
     public void validate(Program program) throws ValidationError {
