@@ -17,3 +17,5 @@ else
 fun add(a:num, b:num):void {
     return;
 }
+
+add();

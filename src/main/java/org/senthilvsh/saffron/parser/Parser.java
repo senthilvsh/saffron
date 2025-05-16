@@ -376,6 +376,22 @@ public class Parser {
 
         if (lookahead.getType() == TokenType.IDENTIFIER) {
             Token token = consume(TokenType.IDENTIFIER);
+            if (lookahead != null && lookahead.getValue().equals("(")) {
+                // Function call
+                consume(TokenType.SYMBOL, new String[]{"("});
+                List<Expression> arguments = new ArrayList<>();
+                assertLookAheadNotNull();
+                while (!lookahead.getValue().equals(")")) {
+                    arguments.add(expression());
+                    if (lookahead.getValue().equals(",")) {
+                        consume(TokenType.SYMBOL, new String[]{","});
+                    }
+                }
+                Token close = consume(TokenType.SYMBOL, new String[]{")"});
+                return new FunctionCallExpression(token.getValue(), arguments,
+                        token.getPosition(),
+                        close.getPosition() + close.getLength() - token.getPosition());
+            }
             return new Identifier(token.getValue(), token.getPosition(), token.getLength());
         }
 
