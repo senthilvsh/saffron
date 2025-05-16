@@ -6,11 +6,13 @@ public class Variable {
     private final String name;
     private final Type type;
     private BaseObj value;
+    private final boolean currentScope;
 
-    public Variable(String name, Type type, BaseObj value) {
+    public Variable(String name, Type type, BaseObj value, boolean currentScope) {
         this.name = name;
         this.type = type;
         this.value = value;
+        this.currentScope = currentScope;
     }
 
     public String getName() {
@@ -27,5 +29,9 @@ public class Variable {
 
     public void setValue(BaseObj value) {
         this.value = value;
+    }
+
+    public boolean isCurrentScope() {
+        return currentScope;
     }
 }

@@ -80,7 +80,7 @@ public class Interpreter {
                 throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
                         vds.getPosition(), vds.getLength());
             }
-            Variable v = new Variable(name, Type.of(vds.getType()), null);
+            Variable v = new Variable(name, Type.of(vds.getType()), null, true);
             frame.put(name, v);
         }
     }

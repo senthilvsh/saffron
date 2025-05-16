@@ -6,10 +6,17 @@ import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static org.senthilvsh.saffron.common.Type.VOID;
 
 public class Validator {
     private final FrameStack stack = new FrameStack();
+    private final Map<String, FunctionDefinition> functions = new HashMap<>();
+
+    private FunctionDefinition functionUnderEvaluation = null;
 
     public Validator() {
         stack.push(new Frame());
@@ -32,6 +39,21 @@ public class Validator {
         } else if (statement instanceof PrintStatement ps) {
             Expression expression = ps.getExpression();
             getType(expression);
+        } else if (statement instanceof ReturnStatement rs) {
+            Expression expression = rs.getExpression();
+            Type type = VOID;
+            if (expression != null) {
+                type = getType(expression);
+            }
+            if (functionUnderEvaluation != null) {
+                Type returnType = functionUnderEvaluation.getReturnType();
+                if (type != returnType) {
+                    throw new ValidationError(
+                            String.format("Must return a value of type '%s'", returnType.getName()),
+                            rs.getPosition(),
+                            rs.getLength());
+                }
+            }
         } else if (statement instanceof ConditionalStatement cs) {
             Expression condition = cs.getCondition();
             Type conditionType = getType(condition);
@@ -53,15 +75,46 @@ public class Validator {
             validate(wl.getBody());
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
-            if (Type.of(vds.getType()) == Type.VOID) {
-                throw new ValidationError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
+            if (Type.of(vds.getType()) == VOID) {
+                throw new ValidationError(String.format("Variables cannot have '%s' type", VOID.getName()),
                         vds.getPosition(), vds.getLength());
             }
             Frame frame = stack.peek();
-            if (frame.containsKey(name)) {
+            if (frame.containsKey(name) && frame.get(name).isCurrentScope()) {
                 throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
-            frame.put(name, new Variable(name, Type.of(vds.getType()), null));
+            frame.put(name, new Variable(name, Type.of(vds.getType()), null, true));
+        } else if (statement instanceof FunctionDefinition fd) {
+            // Create a new frame
+            stack.newFrame();
+
+            // Set arguments in the new frame
+            Frame frame = stack.peek();
+            var arguments = fd.getArguments();
+            for (var a : arguments) {
+                frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, true));
+            }
+
+            // Add function definition to global list
+            String signature = fd.getSignature();
+            if (functions.containsKey(signature)) {
+                throw new ValidationError(
+                        String.format("Function re-declaration: '%s'", fd.getName()),
+                        fd.getNamePosition(),
+                        fd.getNameLength());
+            }
+            functions.put(signature, fd);
+
+            // Set current definition as being evaluated
+            functionUnderEvaluation = fd;
+
+            // Validate body (including return statements)
+            validate(fd.getBody());
+
+            functionUnderEvaluation = null;
+
+            // Pop frame
+            stack.pop();
         }
     }
 

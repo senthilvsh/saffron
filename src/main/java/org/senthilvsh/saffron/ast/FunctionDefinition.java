@@ -10,14 +10,18 @@ public class FunctionDefinition extends Statement {
     private final List<FunctionArgument> arguments;
     private final BlockStatement body;
     private final Type returnType;
+    private final int namePosition;
+    private final int nameLength;
 
     public FunctionDefinition(String name, List<FunctionArgument> arguments, BlockStatement body, Type returnType,
-                              int position, int length) {
+                              int position, int length, int namePosition, int nameLength) {
         super(position, length);
         this.name = name;
         this.arguments = arguments;
         this.body = body;
         this.returnType = returnType;
+        this.namePosition = namePosition;
+        this.nameLength = nameLength;
     }
 
     public String getName() {
@@ -34,6 +38,14 @@ public class FunctionDefinition extends Statement {
 
     public Type getReturnType() {
         return returnType;
+    }
+
+    public int getNamePosition() {
+        return namePosition;
+    }
+
+    public int getNameLength() {
+        return nameLength;
     }
 
     public String getSignature() {

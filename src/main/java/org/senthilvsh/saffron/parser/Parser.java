@@ -93,7 +93,9 @@ public class Parser {
                     arguments,
                     body,
                     Type.of(returnType.getValue()),
-                    funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition());
+                    funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition(),
+                    functionName.getPosition(),
+                    functionName.getLength());
         }
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("print")) {

@@ -1,0 +1,19 @@
+var a:num;
+var b:num;
+
+a = 100;
+b = 100;
+
+var x:str;
+x = "senthil";
+
+if (a < b)
+    print "a < b";
+else if(a > b)
+    print "a > b";
+else
+    print "a == b";
+
+fun add(a:num, b:num):void {
+    return 10;
+}
