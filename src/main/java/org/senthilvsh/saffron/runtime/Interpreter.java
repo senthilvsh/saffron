@@ -54,6 +54,27 @@ public class Interpreter {
             }
             return variable.getValue();
         }
+        if (expression instanceof UnaryExpression unaryExpression) {
+            String operator = unaryExpression.getOperator();
+            Expression operand = unaryExpression.getOperand();
+            BaseObj baseObj = evaluate(operand);
+            if ("+-".contains(operator)) {
+                if (baseObj.getType() != Type.NUMBER) {
+                    throw new InterpreterException(
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getType().getName()),
+                            unaryExpression.getOperatorPosition(),
+                            unaryExpression.getOperatorLength()
+                    );
+                }
+                if ("+".equals(operator)) {
+                    return baseObj;
+                }
+                if ("-".equals(operator)) {
+                    NumberObj numberObj = (NumberObj) baseObj;
+                    return new NumberObj(-1 * numberObj.getValue());
+                }
+            }
+        }
         if (expression instanceof BinaryExpression binaryExpression) {
             String operator = binaryExpression.getOperator();
 

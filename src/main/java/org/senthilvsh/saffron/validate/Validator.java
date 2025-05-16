@@ -50,6 +50,21 @@ public class Validator {
             }
             return variableTypes.get(identifier.getName());
         }
+        if (expression instanceof UnaryExpression unaryExpression) {
+            String operator = unaryExpression.getOperator();
+            Expression operand = unaryExpression.getOperand();
+            Type operandType = getType(operand);
+            if ("+-".contains(operator)) {
+                if (operandType != Type.NUMBER) {
+                    throw new ValidatorException(
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, operandType.getName()),
+                            unaryExpression.getOperatorPosition(),
+                            unaryExpression.getOperatorLength()
+                    );
+                }
+                return Type.NUMBER;
+            }
+        }
         if (expression instanceof BinaryExpression binaryExpression) {
             String operator = binaryExpression.getOperator();
 

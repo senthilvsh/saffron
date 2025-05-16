@@ -168,7 +168,7 @@ public class Parser {
     }
 
     Expression multiplicativeExpression() throws ParseError {
-        Expression left = primaryExpression();
+        Expression left = unaryExpression();
 
         if (lookahead == null || !isMultiplicativeOperator(lookahead.getValue())) {
             return left;
@@ -188,6 +188,26 @@ public class Parser {
 
     private boolean isMultiplicativeOperator(String operator) {
         return "*".equals(operator) || "/".equals(operator) || "%".equals(operator);
+    }
+
+    public Expression unaryExpression() throws ParseError {
+        assertLookAheadNotNull();
+
+        if (isUnaryOperator(lookahead.getValue())) {
+            Token operator = consume(TokenType.OPERATOR, new String[]{"+", "-", "!"});
+            Expression expression = primaryExpression();
+            return new UnaryExpression(operator.getValue(), expression,
+                    operator.getPosition(),
+                    expression.getPosition() + expression.getLength() - operator.getPosition(),
+                    operator.getPosition(),
+                    operator.getLength());
+        }
+
+        return primaryExpression();
+    }
+
+    private boolean isUnaryOperator(String operator) {
+        return "!+-".contains(operator);
     }
 
     Expression primaryExpression() throws ParseError {
