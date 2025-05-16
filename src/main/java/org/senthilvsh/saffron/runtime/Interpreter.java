@@ -6,10 +6,16 @@ import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Interpreter {
     private final FrameStack stack = new FrameStack();
+    private final Map<String, FunctionDefinition> functions = new HashMap<>();
+
+    private FunctionDefinition functionUnderEvaluation = null;
 
     public Interpreter() {
         stack.push(new Frame());
@@ -82,6 +88,20 @@ public class Interpreter {
             }
             Variable v = new Variable(name, Type.of(vds.getType()), null, true);
             frame.put(name, v);
+        } else if (statement instanceof FunctionDefinition fd) {
+            String signature = fd.getSignature();
+            if (functions.containsKey(signature)) {
+                throw new RuntimeError(
+                        String.format("Function re-declaration: %s(%s)",
+                                fd.getName(),
+                                fd.getArguments()
+                                        .stream()
+                                        .map(a -> a.getType().getName().toLowerCase())
+                                        .collect(Collectors.joining(","))),
+                        fd.getNamePosition(),
+                        fd.getNameLength());
+            }
+            functions.put(signature, fd);
         }
     }
 

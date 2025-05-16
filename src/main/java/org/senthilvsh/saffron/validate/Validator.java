@@ -9,6 +9,7 @@ import org.senthilvsh.saffron.common.Variable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.senthilvsh.saffron.common.Type.VOID;
 
@@ -99,7 +100,12 @@ public class Validator {
             String signature = fd.getSignature();
             if (functions.containsKey(signature)) {
                 throw new ValidationError(
-                        String.format("Function re-declaration: '%s'", fd.getName()),
+                        String.format("Function re-declaration: %s(%s)",
+                                fd.getName(),
+                                fd.getArguments()
+                                        .stream()
+                                        .map(a -> a.getType().getName().toLowerCase())
+                                        .collect(Collectors.joining(","))),
                         fd.getNamePosition(),
                         fd.getNameLength());
             }

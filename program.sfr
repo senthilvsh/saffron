@@ -15,5 +15,5 @@ else
     print "a == b";
 
 fun add(a:num, b:num):void {
-    return 10;
+    return;
 }
