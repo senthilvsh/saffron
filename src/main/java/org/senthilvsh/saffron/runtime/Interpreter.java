@@ -83,7 +83,9 @@ public class Interpreter {
             }
         } else if (statement instanceof BreakStatement) {
             throw new BreakLoop();
-        } else if (statement instanceof VariableDeclaration vds) {
+        } else if (statement instanceof ContinueStatement) {
+            throw new ContinueLoop();
+        }  else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
             Frame frame = stack.peek();

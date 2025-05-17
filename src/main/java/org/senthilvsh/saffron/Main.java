@@ -17,8 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Add user guide to readme
-    // TODO: Add sample programs folder
     // TODO: Check usage of VOID types in expressions
     public static void main(String[] args) {
         if (args.length < 1) {

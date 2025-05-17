@@ -5,12 +5,211 @@
 
 Saffron is a simple, type-safe, interpreted, general-purpose programming language.
 
+The language provides three basic data types (Number, String and Boolean) and basic
+programming constructs like conditional statements, loops and functions.
 
-## Requirements
+It also comes with a standard library of functions that support console I/O,
+string manipulation and data conversions.
+
+
+## Setup
 
 Saffron is written in Java. You need Java 17 (or higher) installed on your system
 to run Saffron programs.
 
+### Build
+
+Until the first Release is available, you have to clone the repo and build it locally.
+You need JDK 17 (or higher) to build Saffron itself.
+
+```shell
+git clone https://github.com/senthilvsh/saffron.git
+cd saffron
+mvn clean install
+```
+
+If there are no errors, this will create `./target/saffron.jar`.
+
+### Running a Saffron program <a name="run_saffron_program"></a>
+
+To run a Saffron program called __my-program.sfr__, use the following command.
+
+```shell
+java -jar saffron.jar "my-program.sfr"
+```
+
+If the files are not available in the current directory, you can specify the absolute path.
+
+```shell
+java -jar /path/to/saffron.jar "/path/to/my-program.sfr"
+```
+
+## User Guide
+
+This section will walk you through the language features and standard library functions
+using example programs. You can copy the code in each example below and run it as described in the
+[Running a Saffron program](#run_saffron_program) section above.
+
+### 1. Hello World
+
+```
+writeln("Saffron is awesome!");
+```
+
+The above program writes a string to the console. The `writeln` is a standard library function.
+
+### 2. Variables
+
+```
+var message:str;
+
+message = "Saffron is awesome!"
+
+writeln(message);
+```
+
+Variables are declared using the `var` keyword. The type of the variable is specified immediately
+following the variable name, separated by the `:` symbol.
+
+Variables can also be initialized at the same time they are declared.
+
+```
+var message:str = "Saffron is awesome!"
+```
+
+Saffron supports three data types:
+
+- __Number__ - is a 4-byte double precision floating point value.
+
+- __String__ - is a sequence of Unicode characters.
+
+- __Boolean__ - is either `true` or `false`.
+
+```
+var age:num = 30;
+
+var isFound:bool = false;
+```
+
+### 3. Console I/O
+
+```
+write("Enter your name: ");
+
+var user:str = readln();
+
+writeln("Namaste " + user + "!");
+```
+
+The `readln()` function reads one line of text from the console. Also note the use
+of `write` instead of `writeln`. The former will NOT add a new-line character at the end.
+
+### 4. Parse string as a number
+
+```
+write("Enter a number: ");
+
+var str_val:str = readln();
+
+var num_val:num = to_num(str_val);
+
+writeln("I doubled your number: " + num_val * 2);
+
+```
+
+The `to_num()` function is used to convert a string to a number.
+
+### 5. Conditional statements
+
+```
+write("Enter first number: ");
+var n1:num = to_num(readln());
+
+write("Enter second number: ");
+var n2:num = to_num(readln());
+
+if (n1 > n2) {
+    writeln("First number is greater than second number");
+} else if (n1 < n2) {
+    writeln("First number is less than second number");
+} else {
+    writeln("First number is equal to second number");
+}
+```
+
+The `if` keyword is used to execute a block of statements if a condition is true.
+The `else` keyword is used to execute a block of statements if the above condition is false.
+You can also chain if-else statements to check a series of conditions as shown above.
+
+### 6. Loops
+
+```
+var i:num = 1;
+
+while (i < 10) {
+    writeln(i);
+    i = i + 1;
+} 
+```
+
+The above program uses the `while` loop to print numbers from 1 to 10.
+
+Aside from the loop condition, you can control the execution of loops using
+the `break` and `continue` statements.
+
+```
+var i:num = 1;
+
+while (i < 10) {
+    if (i % 2 == 0) {
+        i = i + 1;
+        continue;
+    }
+    writeln(i);
+    i = i + 1;
+}
+```
+
+In the above program, we check whether the current value of `i` is an even number
+and skip the current iteration using the `continue` statement. Similarly, a `break` statement can be used to exit a loop.
+
+### 7. Functions
+
+```
+fun greet(user: str): str {
+    return "Namaste " + user + "!";
+}
+
+write("Enter your name: ");
+
+var user:str = readln();
+
+writeln(greet(user));
+```
+
+In the above program, we define a function called ___greet___ which takes a string parameter and
+returns a greeting.
+
+A function is defined using the `fun` keyword, followed by the name of the function. The name of the function must be followed by a pair of open and close brackets `()`.
+
+The function can optionally have arguments which are declared similar to variable declarations,
+but without the `var` keyword. These arguments must be specified inside the open and close brackets.
+
+The return type of the function is specified immediately after the closing bracket `)`,
+separated by the `:` symbol. Functions that do not return any value must have the `void` return type.
+
+After the return type, the body of the function must be speficied in the form of a statement block.
+
+```
+fun print_something(msg: str): void {
+    writeln(msg);
+}
+
+print_something("Saffron is awesome!");
+```
+
+Note that __void__ is not a proper data type i.e, it cannot be used in variable declarations.
+It is used only in the case of functions that do not return any value.
 
 ## Standard Library
 
