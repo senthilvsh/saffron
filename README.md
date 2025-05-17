@@ -114,3 +114,34 @@ Find whether the ___source___ string ends with the ___search___ string.
 ```
 str_endswith(source: str, search: str): bool
 ```
+
+### Data Conversion
+
+#### to_num
+
+Parse the ___source___ string as a number.
+
+Throws an exception if ___source___ is not in a valid number format.
+
+```
+to_num(source: str): num
+```
+
+#### to_bool
+
+Parse the ___source___ string as a boolean.
+
+Throws an exception if ___source___ is not a valid boolean value.
+
+```
+to_bool(source: str): bool
+```
+
+#### to_str
+
+Convert the ___source___ value to its string representation.
+
+```
+to_str(source: num): str
+to_str(source: bool): str
+```

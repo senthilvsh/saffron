@@ -2,6 +2,10 @@ package org.senthilvsh.saffron.stdlib;
 
 import org.senthilvsh.saffron.ast.NativeFunctionDefinition;
 import org.senthilvsh.saffron.stdlib.console.*;
+import org.senthilvsh.saffron.stdlib.conversion.BooleanToString;
+import org.senthilvsh.saffron.stdlib.conversion.NumberToString;
+import org.senthilvsh.saffron.stdlib.conversion.StringToBoolean;
+import org.senthilvsh.saffron.stdlib.conversion.StringToNumber;
 import org.senthilvsh.saffron.stdlib.string.*;
 
 import java.util.ArrayList;
@@ -32,6 +36,11 @@ public class NativeFunctionsRegistry {
         nativeFunctions.add(new StringContains());
         nativeFunctions.add(new StringStartsWith());
         nativeFunctions.add(new StringEndsWith());
+
+        nativeFunctions.add(new StringToNumber());
+        nativeFunctions.add(new StringToBoolean());
+        nativeFunctions.add(new NumberToString());
+        nativeFunctions.add(new BooleanToString());
 
         Map<String, NativeFunctionDefinition> definitions = new HashMap<>();
 
