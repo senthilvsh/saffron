@@ -447,29 +447,28 @@ public class Parser {
     Token consume(TokenType type, String[] values) throws ParseError {
         if (lookahead == null) {
             Token last = tokens.get(tokens.size() - 1);
-            throw new ParseError(String.format("Expected one of %s",
-                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
-                    last.getPosition(), last.getLength());
+            throw new ParseError(
+                    unexpectedTokenError(values, "End of stream reached unexpectedly"),
+                    last.getPosition(),
+                    last.getLength()
+            );
         }
 
         if (lookahead.getType() != type) {
-            throw new ParseError(String.format("Expected one of %s",
-                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
-                    lookahead.getPosition(), lookahead.getLength());
+            throw new ParseError(
+                    unexpectedTokenError(values, String.format("Unexpected '%s'", lookahead.getValue())),
+                    lookahead.getPosition(),
+                    lookahead.getLength()
+            );
         }
 
-        boolean found = false;
-        for (String value : values) {
-            if (lookahead.getValue().equals(value)) {
-                found = true;
-                break;
-            }
-        }
+        boolean found = Arrays.stream(values).anyMatch(v -> v.equals(lookahead.getValue()));
         if (!found) {
-            // TODO: Better error message when only one item is in values array
-            throw new ParseError(String.format("Expected one of %s",
-                    Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(","))),
-                    lookahead.getPosition(), lookahead.getLength());
+            throw new ParseError(
+                    unexpectedTokenError(values, String.format("Unexpected '%s'", lookahead.getValue())),
+                    lookahead.getPosition(),
+                    lookahead.getLength()
+            );
         }
 
         Token token = lookahead;
@@ -480,6 +479,18 @@ public class Parser {
             lookahead = tokens.get(tokenIdx);
         }
         return token;
+    }
+
+    private String unexpectedTokenError(String[] values, String defaultMessage) {
+        if (values == null || values.length == 0) {
+            return defaultMessage;
+        }
+
+        if (values.length == 1) {
+            return String.format("Expected a '%s'", values[0]);
+        } else {
+            return String.format("Expected one of %s", Arrays.stream(values).map(v -> "'" + v + "'").collect(Collectors.joining(",")));
+        }
     }
 
     void assertLookAheadNotNull() throws ParseError {

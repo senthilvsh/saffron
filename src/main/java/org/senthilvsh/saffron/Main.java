@@ -26,7 +26,12 @@ public class Main {
             return;
         }
 
-        // TODO: Print version info
+        if (args[0].trim().equals("--version") || args[0].trim().equals("--help")) {
+            System.out.println("Saffron v0.1");
+            System.out.println();
+            System.out.println("Saffron is a simple, type-safe, interpreted, general-purpose programming language.");
+            return;
+        }
 
         String input = args[0];
 
