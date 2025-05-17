@@ -88,16 +88,29 @@ public class Interpreter {
             throw new BreakLoop();
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
+            Type variableType = Type.of(vds.getType());
             Frame frame = stack.peek();
             if (frame.containsKey(name)) {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
-            if (Type.of(vds.getType()) == Type.VOID) {
+            if (variableType == Type.VOID) {
                 throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
                         vds.getPosition(), vds.getLength());
             }
-            Variable v = new Variable(name, Type.of(vds.getType()), null, true);
+            BaseObj initValue = null;
+            if (vds.getExpression() != null) {
+                initValue = evaluate(vds.getExpression());
+                if (initValue.getType() != variableType) {
+                    throw new RuntimeError(
+                            String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
+                                    initValue.getType().getName(), variableType.getName()),
+                            vds.getExpression().getPosition(),
+                            vds.getExpression().getLength()
+                    );
+                }
+            }
+            Variable v = new Variable(name, Type.of(vds.getType()), initValue, true);
             frame.put(name, v);
         } else if (statement instanceof FunctionDefinition fd) {
             String signature = fd.getSignature();

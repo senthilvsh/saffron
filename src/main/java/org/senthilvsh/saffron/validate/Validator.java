@@ -82,7 +82,8 @@ public class Validator {
             validate(wl.getBody());
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
-            if (Type.of(vds.getType()) == VOID) {
+            Type variableType = Type.of(vds.getType());
+            if (variableType == VOID) {
                 throw new ValidationError(String.format("Variables cannot have '%s' type", VOID.getName()),
                         vds.getPosition(), vds.getLength());
             }
@@ -90,6 +91,18 @@ public class Validator {
             if (frame.containsKey(name) && frame.get(name).isCurrentScope()) {
                 throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
+
+            if (vds.getExpression() != null) {
+                Type expType = getType(vds.getExpression());
+                if (expType != variableType) {
+                    throw new ValidationError(
+                            String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
+                                    expType.getName(), variableType.getName()),
+                            vds.getExpression().getPosition(), vds.getExpression().getLength()
+                    );
+                }
+            }
+
             frame.put(name, new Variable(name, Type.of(vds.getType()), null, true));
         } else if (statement instanceof FunctionDefinition fd) {
             // Create a new frame

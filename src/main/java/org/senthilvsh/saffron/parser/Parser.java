@@ -57,8 +57,19 @@ public class Parser {
             Token variableName = consume(TokenType.IDENTIFIER);
             consume(TokenType.SYMBOL, new String[]{":"});
             Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
+
+            Expression expression = null;
+
+            // Variable Initialization
+            assertLookAheadNotNull();
+            if (lookahead.getValue().equals("=")) {
+                consume(OPERATOR, new String[]{"="});
+                expression = expression();
+            }
+
             Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new VariableDeclaration(variableName.getValue(), typeSpecifier.getValue(),
+
+            return new VariableDeclaration(variableName.getValue(), typeSpecifier.getValue(), expression,
                     varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
         }
 
