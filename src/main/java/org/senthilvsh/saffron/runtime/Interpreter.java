@@ -38,9 +38,6 @@ public class Interpreter {
             for (Statement s : statements) {
                 execute(s);
             }
-        } else if (statement instanceof PrintStatement ps) {
-            BaseObj result = evaluate(ps.getExpression());
-            System.out.println(stringValue(result));
         } else if (statement instanceof ReturnStatement rs) {
             Expression expression = rs.getExpression();
             BaseObj returnValue = null;

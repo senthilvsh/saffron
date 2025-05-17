@@ -109,14 +109,6 @@ public class Parser {
                     functionName.getLength());
         }
 
-        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("print")) {
-            Token printKeyword = consume(TokenType.KEYWORD, new String[]{"print"});
-            Expression expression = expression();
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new PrintStatement(expression, printKeyword.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - printKeyword.getPosition());
-        }
-
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("return")) {
             Token returnKeyword = consume(TokenType.KEYWORD, new String[]{"return"});
             Expression expression = null;

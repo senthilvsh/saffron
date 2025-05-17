@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    // TODO: Remove print statement
     // TODO: Add user guide to readme
     // TODO: Add sample programs folder
     // TODO: Check usage of VOID types in expressions
