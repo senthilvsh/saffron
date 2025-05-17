@@ -56,14 +56,15 @@ using example programs. You can copy the code in each example below and run it a
 writeln("Saffron is awesome!");
 ```
 
-The above program writes a string to the console. The `writeln` is a standard library function.
+The above program writes a string to the console. The `writeln()` function is a standard library function
+that prints a given value to the console.
 
 ### 2. Variables
 
 ```
 var message:str;
 
-message = "Saffron is awesome!"
+message = "Saffron is awesome!";
 
 writeln(message);
 ```
@@ -74,7 +75,7 @@ following the variable name, separated by the `:` symbol.
 Variables can also be initialized at the same time they are declared.
 
 ```
-var message:str = "Saffron is awesome!"
+var message:str = "Saffron is awesome!";
 ```
 
 Saffron supports three data types:
@@ -87,8 +88,10 @@ Saffron supports three data types:
 
 ```
 var age:num = 30;
+writeln(age);
 
-var isFound:bool = false;
+var is_found:bool = false;
+writeln(is_found);
 ```
 
 ### 3. Console I/O
@@ -146,7 +149,7 @@ You can also chain if-else statements to check a series of conditions as shown a
 ```
 var i:num = 1;
 
-while (i < 10) {
+while (i <= 10) {
     writeln(i);
     i = i + 1;
 } 
@@ -160,7 +163,7 @@ the `break` and `continue` statements.
 ```
 var i:num = 1;
 
-while (i < 10) {
+while (i <= 10) {
     if (i % 2 == 0) {
         i = i + 1;
         continue;
@@ -171,7 +174,8 @@ while (i < 10) {
 ```
 
 In the above program, we check whether the current value of `i` is an even number
-and skip the current iteration using the `continue` statement. Similarly, a `break` statement can be used to exit a loop.
+and skip the current iteration using the `continue` statement. Similarly, a `break` statement 
+can be used to exit a loop.
 
 ### 7. Functions
 
@@ -190,7 +194,8 @@ writeln(greet(user));
 In the above program, we define a function called ___greet___ which takes a string parameter and
 returns a greeting.
 
-A function is defined using the `fun` keyword, followed by the name of the function. The name of the function must be followed by a pair of open and close brackets `()`.
+A function is defined using the `fun` keyword, followed by the name of the function. 
+The name of the function must be followed by a pair of open and close brackets `()`.
 
 The function can optionally have arguments which are declared similar to variable declarations,
 but without the `var` keyword. These arguments must be specified inside the open and close brackets.
@@ -261,9 +266,11 @@ Get a sub-string of the ___source___ string.
 
 The sub-string will be from the ___start___ position till the ___end___ position, inclusive.
 
-The overload without the ___end___ argument will return the sub-string from the ___start___ position till the end of the ___source___ string.
+The overload without the ___end___ argument will return the sub-string from 
+the ___start___ position till the end of the ___source___ string.
 
-Positions are zero-based i.e., the position of the first character is ___0___ and the position of the last character is ___length - 1___.
+Positions are zero-based i.e., the position of the first character is ___0___ 
+and the position of the last character is ___length - 1___.
 
 ```
 str_substr(source: str, start: num): str
