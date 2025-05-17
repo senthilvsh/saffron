@@ -8,6 +8,8 @@ Saffron is a simple, type-safe, interpreted, general-purpose programming languag
 The language provides three basic data types (Number, String and Boolean) and basic
 programming constructs like conditional statements, loops and functions.
 
+It provides [type safety](#type_safety) by making a series of checks before starting execution.
+
 It also comes with a standard library of functions that support console I/O,
 string manipulation and data conversions.
 
@@ -80,7 +82,7 @@ var message:str = "Saffron is awesome!";
 
 Saffron supports three data types:
 
-- __Number__ - is a 4-byte double precision floating point value.
+- __Number__ - is an 8-byte double precision floating point value.
 
 - __String__ - is a sequence of Unicode characters.
 
@@ -216,9 +218,72 @@ print_something("Saffron is awesome!");
 Note that __void__ is not a proper data type i.e, it cannot be used in variable declarations.
 It is used only in the case of functions that do not return any value.
 
+
+## Type Safety <a name="type_safety"></a>
+
+Saffron is a type-safe language. Before running a program, it is validated to find all type-related errors.
+
+All variables must be declared before being used.
+```
+// var a:num
+
+a = 10; // error
+```
+
+A variable cannot be redeclared in the same scope
+```
+var a:num = 10;
+var a:num = 20;    // error, 'a' is already declared in this scope
+
+fun test():void {
+    var a:num = 20;    // OK, because a function introduces a new scope
+}
+```
+
+All variables must have a type specified.
+```
+var a = 10; // error
+```
+
+A value assigned to a variable must be of the same type.
+```
+var a:num = 10;        // OK
+var b:num = "abcd";    // error
+var c:str = 10 * 20;   // error
+```
+
+In an expression, the type of operands must match the types allowed by the operators.
+```
+var a:num = 12 * "abcd"; // error, cannot multiply number and string
+var b:str = -"abcd";     // error, unary - not allowed for string
+```
+
+All functions must declare a return type.
+```
+fun test() {    // error, missing return type
+}
+```
+
+Function must return values matching its return type.
+```
+fun test(): str {
+    return 10;    // error, type of returned value doesn't match the return type
+}
+```
+
+Type of each argument passed to a function must match the type of the declared argument
+```
+fun add(a: num, b: num): num {
+    return a + b;
+}
+
+var res:num = add("1", 2);    // error, type of 1st argument doesn't match the declared type
+```
+
 ## Standard Library
 
-The Saffron Standard Library provides a minimal set of functions to perform console IO and string manipulation.
+The Saffron Standard Library provides a minimal set of functions to perform 
+console I/O, string manipulation and data conversion.
 
 ### Console
 
