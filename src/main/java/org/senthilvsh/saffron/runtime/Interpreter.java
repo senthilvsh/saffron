@@ -5,7 +5,7 @@ import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.stdlib.*;
+import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,13 +30,18 @@ public class Interpreter {
         }
     }
 
-    private void execute(Statement statement) throws RuntimeError {
+    private StatementResult execute(Statement statement) throws RuntimeError {
         if (statement instanceof ExpressionStatement es) {
             evaluate(es.getExpression());
+            return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BlockStatement bs) {
             List<Statement> statements = bs.getStatements();
             for (Statement s : statements) {
-                execute(s);
+                StatementResult result = execute(s);
+                // TODO: CONTINUE and BREAK are only allowed in loops
+                if (result.getType() != StatementResultType.NORMAL) {
+                    return result;
+                }
             }
         } else if (statement instanceof ReturnStatement rs) {
             Expression expression = rs.getExpression();
@@ -45,7 +50,7 @@ public class Interpreter {
                 returnValue = evaluate(expression);
             }
             // TODO: Check whether computed return value matches the function definition's return value
-            throw new FunctionReturn(returnValue);
+            return new ReturnStatementResult(returnValue);
         } else if (statement instanceof ConditionalStatement cs) {
             Expression condition = cs.getCondition();
             BaseObj baseObj = evaluate(condition);
@@ -55,10 +60,10 @@ public class Interpreter {
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
             if (conditionResult.getValue()) {
-                execute(cs.getTrueClause());
+                return execute(cs.getTrueClause());
             } else {
                 if (cs.getFalseClause() != null) {
-                    execute(cs.getFalseClause());
+                    return execute(cs.getFalseClause());
                 }
             }
         } else if (statement instanceof WhileLoop wl) {
@@ -69,23 +74,19 @@ public class Interpreter {
                         condition.getPosition(), condition.getLength());
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
-            try {
-                while (conditionResult.getValue()) {
-                    try {
-                        execute(wl.getBody());
-                    } catch (ContinueLoop e) {
-                        // Next iteration
-                    }
-                    conditionResult = (BooleanObj) evaluate(condition);
+            while (conditionResult.getValue()) {
+                StatementResult result = execute(wl.getBody());
+                if (result.getType() == StatementResultType.BREAK) {
+                    break;
                 }
-            } catch (BreakLoop e) {
-                // Break out of loop
+                conditionResult = (BooleanObj) evaluate(condition);
             }
+            return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BreakStatement) {
-            throw new BreakLoop();
+            return new StatementResult(StatementResultType.BREAK);
         } else if (statement instanceof ContinueStatement) {
-            throw new ContinueLoop();
-        }  else if (statement instanceof VariableDeclaration vds) {
+            return new StatementResult(StatementResultType.CONTINUE);
+        } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
             Frame frame = stack.peek();
@@ -111,6 +112,7 @@ public class Interpreter {
             }
             Variable v = new Variable(name, Type.of(vds.getType()), initValue, true);
             frame.put(name, v);
+            return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof FunctionDefinition fd) {
             String signature = fd.getSignature();
             if (functions.containsKey(signature)) {
@@ -125,7 +127,10 @@ public class Interpreter {
                         fd.getNameLength());
             }
             functions.put(signature, fd);
+            return new StatementResult(StatementResultType.NORMAL);
         }
+
+        return new StatementResult(StatementResultType.NORMAL);
     }
 
     public BaseObj evaluate(Expression expression) throws RuntimeError {
@@ -168,30 +173,32 @@ public class Interpreter {
                         call.getPosition(), call.getLength());
             }
             FunctionDefinition fd = functions.get(signature);
-            try {
-                stack.newFrame();
-                Frame frame = stack.peek();
-                var arguments = fd.getArguments();
-                for (int i = 0; i < arguments.size(); i++) {
-                    frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), true));
-                }
-                functionUnderEvaluation = fd;
-
-                if (fd instanceof NativeFunctionDefinition nfd) {
-                    // TODO: Provide way for native functions to throw errors. Catch them here and print.
-                    nfd.getFunction().run(frame);
-                } else {
-                    execute(functions.get(signature).getBody());
-                }
-
-                functionUnderEvaluation = null;
-                stack.pop();
-                return null;
-            } catch (FunctionReturn e) {
-                functionUnderEvaluation = null;
-                stack.pop();
-                return e.getReturnValue();
+            stack.newFrame();
+            Frame frame = stack.peek();
+            var arguments = fd.getArguments();
+            for (int i = 0; i < arguments.size(); i++) {
+                frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), true));
             }
+            functionUnderEvaluation = fd;
+
+            StatementResult result;
+            if (fd instanceof NativeFunctionDefinition nfd) {
+                // TODO: Provide way for native functions to throw errors. Catch them here and print.
+                result = nfd.getFunction().run(frame);
+            } else {
+                result = execute(functions.get(signature).getBody());
+            }
+
+            functionUnderEvaluation = null;
+
+            stack.pop();
+
+            if (result instanceof ReturnStatementResult rsr) {
+                return rsr.getReturnValue();
+            }
+
+            // TODO: Handle exceptions here
+            throw new RuntimeError("Function call returned an unexpected result", call.getPosition(), call.getLength());
         }
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();

@@ -4,8 +4,9 @@ import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.runtime.FunctionReturn;
 import org.senthilvsh.saffron.runtime.NumberObj;
+import org.senthilvsh.saffron.runtime.ReturnStatementResult;
+import org.senthilvsh.saffron.runtime.StatementResult;
 import org.senthilvsh.saffron.runtime.StringObj;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
@@ -28,10 +29,15 @@ public class StringLength implements NativeFunction {
     }
 
     @Override
-    public void run(Frame frame) throws FunctionReturn {
+    public StatementResult run(Frame frame) {
         Variable variable = frame.get("source");
         StringObj stringObj = (StringObj) variable.getValue();
         String source = stringObj.getValue();
-        throw new FunctionReturn(new NumberObj(source.length()));
+
+        int result = source.length();
+
+        NumberObj returnObj = new NumberObj(result);
+
+        return new ReturnStatementResult(returnObj);
     }
 }

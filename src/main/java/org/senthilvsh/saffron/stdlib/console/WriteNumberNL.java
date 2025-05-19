@@ -3,8 +3,10 @@ package org.senthilvsh.saffron.stdlib.console;
 import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
-import org.senthilvsh.saffron.runtime.FunctionReturn;
 import org.senthilvsh.saffron.runtime.NumberObj;
+import org.senthilvsh.saffron.runtime.ReturnStatementResult;
+import org.senthilvsh.saffron.runtime.StatementResult;
+import org.senthilvsh.saffron.runtime.StatementResultType;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
@@ -26,7 +28,7 @@ public class WriteNumberNL implements NativeFunction {
     }
 
     @Override
-    public void run(Frame frame) throws FunctionReturn {
+    public StatementResult run(Frame frame) {
         NumberObj numberObj = (NumberObj) frame.get("value").getValue();
         double value = numberObj.getValue();
         String str;
@@ -36,5 +38,6 @@ public class WriteNumberNL implements NativeFunction {
             str = String.valueOf(value);
         }
         System.out.println(str);
+        return new ReturnStatementResult(null);
     }
 }

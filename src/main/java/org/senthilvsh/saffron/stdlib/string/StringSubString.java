@@ -4,8 +4,9 @@ import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.runtime.FunctionReturn;
 import org.senthilvsh.saffron.runtime.NumberObj;
+import org.senthilvsh.saffron.runtime.ReturnStatementResult;
+import org.senthilvsh.saffron.runtime.StatementResult;
 import org.senthilvsh.saffron.runtime.StringObj;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
@@ -32,7 +33,7 @@ public class StringSubString implements NativeFunction {
     }
 
     @Override
-    public void run(Frame frame) throws FunctionReturn {
+    public StatementResult run(Frame frame) {
         Variable sourceVar = frame.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
@@ -49,6 +50,6 @@ public class StringSubString implements NativeFunction {
 
         StringObj returnObj = new StringObj(result);
 
-        throw new FunctionReturn(returnObj);
+        return new ReturnStatementResult(returnObj);
     }
 }
