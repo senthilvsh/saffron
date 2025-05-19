@@ -19,38 +19,31 @@ string manipulation and data conversions.
 Saffron is written in Java. You need Java 17 (or higher) installed on your system
 to run Saffron programs.
 
-### Build
+1. Download ___saffron.zip___ from the latest release in the [Releases](https://github.com/senthilvsh/saffron/releases) page.
 
-Until the first Release is available, you have to clone the repo and build it locally.
-You need JDK 17 (or higher) to build Saffron itself.
+2. Extract the ZIP file. The extracted contents will have the following structure.
+    ```
+    saffron/
+    ├─ saffron.jar
+    ├─ saffron
+    ├─ saffron.cmd
 
-```shell
-git clone https://github.com/senthilvsh/saffron.git
-cd saffron
-mvn clean install
-```
+3. Add the path of the ___saffron___ folder to the PATH environment variable
+   so that `saffron` and `saffron.cmd` are available on the PATH.
 
-If there are no errors, this will create `./target/saffron.jar`.
-
-### Running a Saffron program <a name="run_saffron_program"></a>
+### Run a Saffron program <a name="run_saffron_program"></a>
 
 To run a Saffron program called __my-program.sfr__, use the following command.
 
 ```shell
-java -jar saffron.jar "my-program.sfr"
-```
-
-If the files are not available in the current directory, you can specify the absolute path.
-
-```shell
-java -jar /path/to/saffron.jar "/path/to/my-program.sfr"
+saffron "my-program.sfr"
 ```
 
 ## User Guide
 
 This section will walk you through the language features and standard library functions
 using example programs. You can copy the code in each example below and run it as described in the
-[Running a Saffron program](#run_saffron_program) section above.
+[Run a Saffron program](#run_saffron_program) section above.
 
 ### 1. Hello World
 
