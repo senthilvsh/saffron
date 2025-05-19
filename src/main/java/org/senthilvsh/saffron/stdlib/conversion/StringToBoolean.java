@@ -28,7 +28,7 @@ public class StringToBoolean implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
+    public StatementResult run(Frame frame) throws NativeFunctionException {
         Variable sourceVar = frame.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
@@ -40,7 +40,7 @@ public class StringToBoolean implements NativeFunction {
         } else if ("false".equals(source)) {
             result = false;
         } else {
-            return new ExceptionStatementResult("FORMAT_EXCEPTION", "Not a valid boolean");
+           throw new NativeFunctionException("FORMAT_EXCEPTION", "Not a valid boolean");
         }
 
         BooleanObj returnObj = new BooleanObj(result);

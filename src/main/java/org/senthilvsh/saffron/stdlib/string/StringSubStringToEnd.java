@@ -29,7 +29,7 @@ public class StringSubStringToEnd implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
+    public StatementResult run(Frame frame) throws NativeFunctionException {
         Variable sourceVar = frame.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
@@ -39,7 +39,7 @@ public class StringSubStringToEnd implements NativeFunction {
         double start = startObj.getValue();
 
         if (start < 0) {
-            return new ExceptionStatementResult("INDEX_OUT_OF_BOUNDS", "Index out of bounds");
+            throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS", "Index out of bounds");
         }
 
         String result = source.substring((int) start);

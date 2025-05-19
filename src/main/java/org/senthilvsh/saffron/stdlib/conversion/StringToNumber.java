@@ -28,7 +28,7 @@ public class StringToNumber implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
+    public StatementResult run(Frame frame) throws NativeFunctionException {
         Variable sourceVar = frame.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
@@ -37,7 +37,7 @@ public class StringToNumber implements NativeFunction {
         try {
             result = Double.parseDouble(source);
         } catch (NumberFormatException e) {
-            return new ExceptionStatementResult("FORMAT_EXCEPTION", "Not a valid number");
+            throw new NativeFunctionException("FORMAT_EXCEPTION", "Not a valid number");
         }
 
         NumberObj returnObj = new NumberObj(result);

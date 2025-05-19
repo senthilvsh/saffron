@@ -5,5 +5,4 @@ public enum StatementResultType {
     RETURN, // Return statement was executed
     BREAK, // Break statement was executed
     CONTINUE, // Continue statement was executed
-    EXCEPTION // An exception was thrown by the statement
 }

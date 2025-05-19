@@ -16,13 +16,12 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-// TODO: try-catch statement
 // TODO: Array data-type
 // TODO: for-loop with range operator
 // TODO: File I/O
 public class Main {
     public static void main(String[] args) {
-        if (args.length < 1) {
+        if (args.length < 1 || args[0].trim().isEmpty()) {
             System.out.println("Usage: saffron <input>");
             return;
         }
