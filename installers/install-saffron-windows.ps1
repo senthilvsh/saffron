@@ -31,16 +31,21 @@ Invoke-WebRequest -Uri $downloadUrl -OutFile "$installDir\saffron.zip"
 
 # Extract the ZIP file
 Write-Host "Extracting..."
-Expand-Archive -Path "$installDir\saffron.zip" -DestinationPath $installDir -Force
+Expand-Archive -Path "$installDir\saffron.zip" -DestinationPath "$installDir\temp" -Force
 Remove-Item -Path "$installDir\saffron.zip"
 
-# Fix nested directory structure if needed
-if (Test-Path "$installDir\saffron") {
-    Write-Host "Fixing file structure..."
-    # Move all files from nested saffron directory to parent directory
-    Get-ChildItem -Path "$installDir\saffron" | Move-Item -Destination $installDir
-    Remove-Item -Path "$installDir\saffron" -Recurse
-}
+# Fix nested directory structure
+Write-Host "Installing Saffron..."
+
+# Copy JAR file and cmd script
+Copy-Item -Path "$installDir\temp\saffron\saffron.jar" -Destination "$installDir\" -Force
+Copy-Item -Path "$installDir\temp\saffron\saffron.cmd" -Destination "$installDir\" -Force
+
+# Create the main launcher script (avoiding name collision)
+# For Windows, we use saffron.cmd, so we don't need the shell script named 'saffron'
+
+# Clean up
+Remove-Item -Path "$installDir\temp" -Recurse -Force
 
 # Add to PATH
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
