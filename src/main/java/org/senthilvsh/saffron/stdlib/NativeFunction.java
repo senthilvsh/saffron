@@ -3,7 +3,7 @@ package org.senthilvsh.saffron.stdlib;
 import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
-import org.senthilvsh.saffron.runtime.FunctionReturn;
+import org.senthilvsh.saffron.runtime.StatementResult;
 
 import java.util.List;
 
@@ -14,5 +14,5 @@ public interface NativeFunction {
 
     Type getReturnType();
 
-    void run(Frame frame) throws FunctionReturn;
+    StatementResult run(Frame frame);
 }
