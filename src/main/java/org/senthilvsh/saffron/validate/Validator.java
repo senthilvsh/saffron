@@ -5,6 +5,7 @@ import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
+import org.senthilvsh.saffron.runtime.StringObj;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.senthilvsh.saffron.common.Type.STRING;
 import static org.senthilvsh.saffron.common.Type.VOID;
 
 public class Validator {
@@ -79,6 +81,39 @@ public class Validator {
             }
             stack.newBlockScope();
             validate(wl.getBody());
+            stack.pop();
+        } else if (statement instanceof TryCatchStatement tcs) {
+            stack.newBlockScope();
+            validate(tcs.getTryBlock());
+            stack.pop();
+            CatchBlockArgument exType = tcs.getExceptionType();
+            if (exType.getType() != STRING) {
+                throw new ValidationError("The type of the first argument must be string", exType.getPosition(), exType.getLength());
+            }
+            CatchBlockArgument exMsg = tcs.getExceptionMessage();
+            if (exMsg.getType() != STRING) {
+                throw new ValidationError("The type of the second argument must be string", exMsg.getPosition(), exMsg.getLength());
+            }
+            stack.newBlockScope();
+            String typeArgName = tcs.getExceptionType().getName();
+            Variable typeArgVariable = new Variable(
+                    typeArgName,
+                    Type.STRING,
+                    null,
+                    true
+            );
+
+            String msgArgName = tcs.getExceptionMessage().getName();
+            Variable msgArgVariable = new Variable(
+                    msgArgName,
+                    Type.STRING,
+                    null,
+                    true
+            );
+
+            stack.peek().put(typeArgName, typeArgVariable);
+            stack.peek().put(msgArgName, msgArgVariable);
+            validate(tcs.getCatchBlock());
             stack.pop();
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
