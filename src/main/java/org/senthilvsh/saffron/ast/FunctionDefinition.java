@@ -49,6 +49,10 @@ public class FunctionDefinition extends Statement {
     }
 
     public String getSignature() {
-        return name + "_" + arguments.stream().map(a -> a.getType().getName().toLowerCase()).collect(Collectors.joining("_"));
+        String signature = name;
+        if (arguments != null && !arguments.isEmpty()) {
+            signature += "_" + arguments.stream().map(a -> a.getType().getName().toLowerCase()).collect(Collectors.joining("_"));
+        }
+        return signature;
     }
 }

@@ -36,13 +36,15 @@ public class Interpreter {
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BlockStatement bs) {
             List<Statement> statements = bs.getStatements();
+            StatementResult result = new StatementResult(StatementResultType.NORMAL);
             for (Statement s : statements) {
-                StatementResult result = execute(s);
-                // TODO: CONTINUE and BREAK are only allowed in loops
+                result = execute(s);
+                // TODO: Check CONTINUE and BREAK are only allowed in loops
                 if (result.getType() != StatementResultType.NORMAL) {
-                    return result;
+                    break;
                 }
             }
+            return result;
         } else if (statement instanceof ReturnStatement rs) {
             Expression expression = rs.getExpression();
             BaseObj returnValue = null;
@@ -60,10 +62,18 @@ public class Interpreter {
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
             if (conditionResult.getValue()) {
-                return execute(cs.getTrueClause());
+                StatementResult result;
+                stack.newBlockScope();
+                result = execute(cs.getTrueClause());
+                stack.pop();
+                return result;
             } else {
                 if (cs.getFalseClause() != null) {
-                    return execute(cs.getFalseClause());
+                    StatementResult result;
+                    stack.newBlockScope();
+                    result = execute(cs.getFalseClause());
+                    stack.pop();
+                    return result;
                 }
             }
         } else if (statement instanceof WhileLoop wl) {
@@ -75,7 +85,9 @@ public class Interpreter {
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
             while (conditionResult.getValue()) {
+                stack.newBlockScope();
                 StatementResult result = execute(wl.getBody());
+                stack.pop();
                 if (result.getType() == StatementResultType.BREAK) {
                     break;
                 }
@@ -90,7 +102,7 @@ public class Interpreter {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
             Frame frame = stack.peek();
-            if (frame.containsKey(name)) {
+            if (frame.containsKey(name) && frame.get(name).isCurrentScope()) {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
@@ -186,6 +198,7 @@ public class Interpreter {
                 // TODO: Provide way for native functions to throw errors. Catch them here and print.
                 result = nfd.getFunction().run(frame);
             } else {
+                // TODO: Provide specialized function-body statement
                 result = execute(functions.get(signature).getBody());
             }
 
@@ -197,8 +210,7 @@ public class Interpreter {
                 return rsr.getReturnValue();
             }
 
-            // TODO: Handle exceptions here
-            throw new RuntimeError("Function call returned an unexpected result", call.getPosition(), call.getLength());
+            return null;
         }
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();

@@ -62,9 +62,13 @@ public class Validator {
                 throw new ValidationError("The condition of an 'if' statement must be a boolean expression",
                         condition.getPosition(), condition.getLength());
             }
+            stack.newBlockScope();
             validate(cs.getTrueClause());
+            stack.pop();
             if (cs.getFalseClause() != null) {
+                stack.newBlockScope();
                 validate(cs.getFalseClause());
+                stack.pop();
             }
         } else if (statement instanceof WhileLoop wl) {
             Expression condition = wl.getCondition();
@@ -73,7 +77,9 @@ public class Validator {
                 throw new ValidationError("The condition of a 'while' loop must be a boolean expression",
                         condition.getPosition(), condition.getLength());
             }
+            stack.newBlockScope();
             validate(wl.getBody());
+            stack.pop();
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
