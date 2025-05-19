@@ -37,9 +37,18 @@ Remove-Item -Path "$installDir\saffron.zip"
 # Fix nested directory structure if needed
 if (Test-Path "$installDir\saffron") {
     Write-Host "Fixing file structure..."
-    # Move all files from nested saffron directory to parent directory
-    Get-ChildItem -Path "$installDir\saffron" | Move-Item -Destination $installDir
-    Remove-Item -Path "$installDir\saffron" -Recurse
+    # Copy files from nested saffron directory to parent directory
+    # Using copy instead of move to handle existing files
+    Get-ChildItem -Path "$installDir\saffron" | ForEach-Object {
+        $destPath = Join-Path -Path $installDir -ChildPath $_.Name
+        if (Test-Path $destPath) {
+            # Replace existing file
+            Remove-Item -Path $destPath -Force
+        }
+        Copy-Item -Path $_.FullName -Destination $installDir -Force
+    }
+    # Remove the source directory after successful copy
+    Remove-Item -Path "$installDir\saffron" -Recurse -Force
 }
 
 # Add to PATH
