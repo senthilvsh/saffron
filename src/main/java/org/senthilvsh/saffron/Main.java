@@ -16,8 +16,12 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO: Use statement execution result instead of throwing exceptions
+// TODO: try-catch statement
+// TODO: Array data-type
+// TODO: for-loop with range operator
+// TODO: File I/O
 public class Main {
-    // TODO: Check usage of VOID types in expressions
     public static void main(String[] args) {
         if (args.length < 1) {
             System.out.println("Usage: saffron <input>");
