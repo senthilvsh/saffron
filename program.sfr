@@ -1,0 +1,15 @@
+// Hello World example
+writeln("Hello from Saffron!");
+
+var name:str;
+write("Enter your name: ");
+name = readln();
+writeln("Nice to meet you, " + name + "!");
+
+// Show a loop
+var i:num = 1;
+writeln("Counting to 5:");
+while (i <= 5) {
+    writeln(i);
+    i = i + 1;
+}
