@@ -11,4 +11,13 @@ public class FrameStack extends Stack<Frame> {
         }
         push(newFrame);
     }
+
+    public void newBlockScope() {
+        Frame frame = peek();
+        Frame newFrame = new Frame();
+        for (Variable v : frame.values()) {
+            newFrame.put(v.getName(), new Variable(v.getName(), v.getType(), v.getValue(), true));
+        }
+        push(newFrame);
+    }
 }

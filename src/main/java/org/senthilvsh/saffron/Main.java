@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-// TODO: Use statement execution result instead of throwing exceptions
 // TODO: try-catch statement
 // TODO: Array data-type
 // TODO: for-loop with range operator
