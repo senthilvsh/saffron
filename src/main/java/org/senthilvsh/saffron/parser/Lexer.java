@@ -137,6 +137,8 @@ public class Lexer {
                 "continue".equals(identifier) ||
                 "fun".equals(identifier) ||
                 "void".equals(identifier) ||
-                "return".equals(identifier);
+                "return".equals(identifier)||
+                "try".equals(identifier)||
+                "catch".equals(identifier);
     }
 }

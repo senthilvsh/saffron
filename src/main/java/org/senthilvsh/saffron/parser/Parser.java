@@ -163,11 +163,48 @@ public class Parser {
             );
         }
 
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("try")) {
+            return tryCatchStatement();
+        }
+
         if (lookahead.getType() == TokenType.SYMBOL && lookahead.getValue().equals("{")) {
             return blockStatement();
         }
 
         return expressionStatement();
+    }
+
+    Statement tryCatchStatement() throws ParseError {
+        assertLookAheadNotNull();
+        Token tryKeyword = consume(KEYWORD, new String[]{"try"});
+        Statement tryBlock = blockStatement();
+        consume(KEYWORD, new String[]{"catch"});
+        consume(SYMBOL, new String[]{"("});
+        Token typeArgName = consume(IDENTIFIER);
+        consume(SYMBOL, new String[]{":"});
+        Token typeArgType = consume(KEYWORD);
+        consume(SYMBOL, new String[]{","});
+        Token msgArgName = consume(IDENTIFIER);
+        consume(SYMBOL, new String[]{":"});
+        Token msgArgType = consume(KEYWORD);
+        consume(SYMBOL, new String[]{")"});
+        Statement catchBlock = blockStatement();
+        return new TryCatchStatement(
+                tryBlock,
+                new CatchBlockArgument(
+                        typeArgName.getValue(),
+                        Type.of(typeArgType.getValue()),
+                        typeArgName.getPosition(),
+                        typeArgType.getPosition() + typeArgType.getLength() - typeArgName.getPosition()),
+                new CatchBlockArgument(
+                        msgArgName.getValue(),
+                        Type.of(msgArgType.getValue()),
+                        msgArgName.getPosition(),
+                        msgArgType.getPosition() + msgArgType.getLength() - msgArgName.getPosition()),
+                catchBlock,
+                tryKeyword.getPosition(),
+                catchBlock.getPosition() + catchBlock.getLength() - tryKeyword.getPosition()
+        );
     }
 
     // TODO: Handle errors

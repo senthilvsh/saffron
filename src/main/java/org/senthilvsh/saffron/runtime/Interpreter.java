@@ -32,7 +32,11 @@ public class Interpreter {
 
     private StatementResult execute(Statement statement) throws RuntimeError {
         if (statement instanceof ExpressionStatement es) {
-            evaluate(es.getExpression());
+            try {
+                evaluate(es.getExpression());
+            } catch (UserException ex) {
+                return new ExceptionStatementResult(ex.getType(), ex.getMessage());
+            }
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BlockStatement bs) {
             List<Statement> statements = bs.getStatements();
@@ -75,6 +79,46 @@ public class Interpreter {
                     stack.pop();
                     return result;
                 }
+            }
+        } else if (statement instanceof TryCatchStatement tcs) {
+            StatementResult result;
+            Statement tryBlock = tcs.getTryBlock();
+            stack.newBlockScope();
+            result = execute(tryBlock);
+            stack.pop();
+            if (result.getType() == StatementResultType.NORMAL) {
+                return result;
+            } else if (result.getType() == StatementResultType.EXCEPTION) {
+                ExceptionStatementResult esr = (ExceptionStatementResult) result;
+
+                Statement catchBlock = tcs.getCatchBlock();
+
+                stack.newBlockScope();
+
+                String typeArgName = tcs.getExceptionType().getName();
+                String typeArgValue = esr.getExceptionType();
+                Variable typeArgVariable = new Variable(
+                        typeArgName,
+                        Type.STRING,
+                        new StringObj(typeArgValue),
+                        true
+                );
+
+                String msgArgName = tcs.getExceptionMessage().getName();
+                String msgArgValue = esr.getExceptionMessage();
+                Variable msgArgVariable = new Variable(
+                        msgArgName,
+                        Type.STRING,
+                        new StringObj(msgArgValue),
+                        true
+                );
+
+                stack.peek().put(typeArgName, typeArgVariable);
+                stack.peek().put(msgArgName, msgArgVariable);
+
+                result = execute(catchBlock);
+                stack.pop();
+                return result;
             }
         } else if (statement instanceof WhileLoop wl) {
             Expression condition = wl.getCondition();
@@ -208,6 +252,8 @@ public class Interpreter {
 
             if (result instanceof ReturnStatementResult rsr) {
                 return rsr.getReturnValue();
+            } else if (result instanceof ExceptionStatementResult esr) {
+                throw new UserException(esr.getExceptionType(), esr.getExceptionMessage());
             }
 
             return null;

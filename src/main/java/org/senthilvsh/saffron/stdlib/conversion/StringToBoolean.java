@@ -4,10 +4,7 @@ import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.runtime.BooleanObj;
-import org.senthilvsh.saffron.runtime.ReturnStatementResult;
-import org.senthilvsh.saffron.runtime.StatementResult;
-import org.senthilvsh.saffron.runtime.StringObj;
+import org.senthilvsh.saffron.runtime.*;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
@@ -43,7 +40,7 @@ public class StringToBoolean implements NativeFunction {
         } else if ("false".equals(source)) {
             result = false;
         } else {
-            throw new RuntimeException(String.format("Cannot convert '%s' into a boolean value", source));
+            return new ExceptionStatementResult("FORMAT_EXCEPTION", "Not a valid boolean");
         }
 
         BooleanObj returnObj = new BooleanObj(result);

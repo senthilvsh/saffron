@@ -6,7 +6,6 @@ import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.NumberObj;
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
 import org.senthilvsh.saffron.runtime.StatementResult;
-import org.senthilvsh.saffron.runtime.StatementResultType;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;

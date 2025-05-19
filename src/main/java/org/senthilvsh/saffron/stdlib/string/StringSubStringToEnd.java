@@ -4,10 +4,7 @@ import org.senthilvsh.saffron.ast.FunctionArgument;
 import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.runtime.NumberObj;
-import org.senthilvsh.saffron.runtime.ReturnStatementResult;
-import org.senthilvsh.saffron.runtime.StatementResult;
-import org.senthilvsh.saffron.runtime.StringObj;
+import org.senthilvsh.saffron.runtime.*;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
@@ -40,6 +37,10 @@ public class StringSubStringToEnd implements NativeFunction {
         Variable startVar = frame.get("start");
         NumberObj startObj = (NumberObj) startVar.getValue();
         double start = startObj.getValue();
+
+        if (start < 0) {
+            return new ExceptionStatementResult("INDEX_OUT_OF_BOUNDS", "Index out of bounds");
+        }
 
         String result = source.substring((int) start);
 
