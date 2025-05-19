@@ -32,11 +32,7 @@ public class Interpreter {
 
     private StatementResult execute(Statement statement) throws RuntimeError {
         if (statement instanceof ExpressionStatement es) {
-            try {
-                evaluate(es.getExpression());
-            } catch (UserException ex) {
-                return new ExceptionStatementResult(ex.getType(), ex.getMessage());
-            }
+            evaluate(es.getExpression());
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BlockStatement bs) {
             List<Statement> statements = bs.getStatements();
@@ -83,20 +79,21 @@ public class Interpreter {
         } else if (statement instanceof TryCatchStatement tcs) {
             StatementResult result;
             Statement tryBlock = tcs.getTryBlock();
-            stack.newBlockScope();
-            result = execute(tryBlock);
-            stack.pop();
-            if (result.getType() == StatementResultType.NORMAL) {
+
+            try {
+                stack.newBlockScope();
+                result = execute(tryBlock);
+                stack.pop();
                 return result;
-            } else if (result.getType() == StatementResultType.EXCEPTION) {
-                ExceptionStatementResult esr = (ExceptionStatementResult) result;
+            } catch (NativeFunctionException ex) {
+                stack.pop();
 
                 Statement catchBlock = tcs.getCatchBlock();
 
                 stack.newBlockScope();
 
                 String typeArgName = tcs.getExceptionType().getName();
-                String typeArgValue = esr.getExceptionType();
+                String typeArgValue = ex.getType();
                 Variable typeArgVariable = new Variable(
                         typeArgName,
                         Type.STRING,
@@ -105,7 +102,7 @@ public class Interpreter {
                 );
 
                 String msgArgName = tcs.getExceptionMessage().getName();
-                String msgArgValue = esr.getExceptionMessage();
+                String msgArgValue = ex.getMessage();
                 Variable msgArgVariable = new Variable(
                         msgArgName,
                         Type.STRING,
@@ -116,9 +113,15 @@ public class Interpreter {
                 stack.peek().put(typeArgName, typeArgVariable);
                 stack.peek().put(msgArgName, msgArgVariable);
 
-                result = execute(catchBlock);
-                stack.pop();
-                return result;
+                try {
+                    execute(catchBlock);
+                    return new StatementResult(StatementResultType.NORMAL);
+                } catch (NativeFunctionException catchBlockException) {
+                    stack.pop();
+                    // This is the case where code inside the catch block throws an exception
+                    // and it is not handled with a nested try-catch. All we can do it throw it upstream.
+                    throw catchBlockException;
+                }
             }
         } else if (statement instanceof WhileLoop wl) {
             Expression condition = wl.getCondition();
@@ -128,15 +131,15 @@ public class Interpreter {
                         condition.getPosition(), condition.getLength());
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
+            stack.newBlockScope();
             while (conditionResult.getValue()) {
-                stack.newBlockScope();
                 StatementResult result = execute(wl.getBody());
-                stack.pop();
                 if (result.getType() == StatementResultType.BREAK) {
                     break;
                 }
                 conditionResult = (BooleanObj) evaluate(condition);
             }
+            stack.pop();
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BreakStatement) {
             return new StatementResult(StatementResultType.BREAK);
@@ -219,7 +222,7 @@ public class Interpreter {
             for (Expression e : call.getArguments()) {
                 args.add(evaluate(e));
             }
-            List<String> argTypes = args.stream().map(a -> a.getType().getName().toLowerCase()).toList();
+            List<String> argTypes = args.stream().map(a -> a == null ? "" : a.getType().getName().toLowerCase()).toList();
             if (!argTypes.isEmpty()) {
                 signature += "_" + String.join("_", argTypes);
             }
@@ -239,21 +242,23 @@ public class Interpreter {
 
             StatementResult result;
             if (fd instanceof NativeFunctionDefinition nfd) {
-                // TODO: Provide way for native functions to throw errors. Catch them here and print.
-                result = nfd.getFunction().run(frame);
+                try {
+                    result = nfd.getFunction().run(frame);
+                } catch (NativeFunctionException ex) {
+                    functionUnderEvaluation = null;
+                    stack.pop();
+                    throw ex;
+                }
             } else {
                 // TODO: Provide specialized function-body statement
                 result = execute(functions.get(signature).getBody());
             }
 
             functionUnderEvaluation = null;
-
             stack.pop();
 
             if (result instanceof ReturnStatementResult rsr) {
                 return rsr.getReturnValue();
-            } else if (result instanceof ExceptionStatementResult esr) {
-                throw new UserException(esr.getExceptionType(), esr.getExceptionMessage());
             }
 
             return null;
