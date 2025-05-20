@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO: Compare types using the .equals() method
 // TODO: Array data-type
 // TODO: for-loop with range operator
 // TODO: File I/O
