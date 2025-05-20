@@ -30,14 +30,14 @@ Test in dry-run mode:
 
 ```bash
 # From the project root
-./installers/install-saffron-unix.sh --whatif
+./installers/linux.sh --whatif
 ```
 
 Test for real (creates ~/.saffron directory and installs Saffron):
 
 ```bash
 # From the project root
-./installers/install-saffron-unix.sh
+./installers/linux.sh
 ```
 
 ### Windows (PowerShell)
@@ -46,14 +46,14 @@ Test in dry-run mode:
 
 ```powershell
 # From the project root
-./installers/install-saffron-windows.ps1 -WhatIf
+./installers/windows.ps1 -WhatIf
 ```
 
 Test for real (creates ~/.saffron directory and installs Saffron):
 
 ```powershell
 # From the project root
-./installers/install-saffron-windows.ps1
+./installers/windows.ps1
 ```
 
 ## Testing on Different Architectures

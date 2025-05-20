@@ -29,20 +29,20 @@ Saffron comes with a bundled Java Runtime Environment - no separate Java install
 Using __curl__:
 ```bash
 curl -sSL \
-https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+    https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install.sh | bash
 ```
 
 ...or using __wget__:
 ```bash
 wget -qO- \
-https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+    https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install.sh | bash
 ```
 
 **For Windows (PowerShell):**
 ```powershell
 Invoke-Expression `
-(New-Object System.Net.WebClient).DownloadString( `
-'https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')
+    (New-Object System.Net.WebClient).DownloadString( `
+    'https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/windows.ps1')
 ```
 
 The installer will:
