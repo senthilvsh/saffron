@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 // TODO: Compare types using the .equals() method
 // TODO: Array data-type
@@ -25,9 +26,17 @@ public class Main {
             return;
         }
 
+        Properties properties = new Properties();
+        try {
+            properties.load(Main.class.getClassLoader().getResourceAsStream("saffron.properties"));
+        } catch (IOException e) {
+            System.err.println("Unable to load application properties. Exiting now.");
+            e.printStackTrace(System.err);
+        }
+        String version = properties.getProperty("saffron.version");
+
         if (args[0].trim().equals("--version") || args[0].trim().equals("--help")) {
-            // TODO: Externalize version number
-            System.out.println("Saffron v0.1");
+            System.out.println("Saffron" + (version != null ? "v" + version : ""));
             System.out.println();
             System.out.println("Saffron is a simple, type-safe, general-purpose programming language.");
             return;

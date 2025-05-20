@@ -6,8 +6,8 @@
 
     <groupId>org.senthilvsh</groupId>
     <artifactId>saffron</artifactId>
-    <version>0.1-RELEASE</version>
-    <description>Saffron is a simple, type-safe, interpreted, general-purpose programming language</description>
+    <version>0.2</version>
+    <description>Saffron is a simple, type-safe, general-purpose programming language</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -32,5 +32,11 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 </project>
