@@ -18,21 +18,35 @@ string manipulation and data conversions.
 
 Follow the steps below to setup and run Saffron programs.
 
-### 1. Pre-requisites
+### 1. Installation
 
-Saffron is written in Java. You need Java 17 (or higher) installed on your system
-to run Saffron programs.
+#### One-line Installation (Recommended)
 
-1. Install the latest version of Java. If you already have either a JRE or a JDK installed,
-   make sure the version is at least 17 or higher.
-2. The `java` command should be available on the PATH. If not, follow the steps necessary
-   for your operating system to add it to the PATH. You should be able to run
-   the following command without any errors.
-    ```
-    java -version
-    ```
+Saffron now comes with bundled Java Runtime Environment - no separate Java installation required!
 
-### 2. Download Saffron
+**For Linux/macOS:**
+```bash
+curl -sSL https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+```
+or using wget:
+```bash
+wget -qO- https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+```
+
+**For Windows (PowerShell):**
+```powershell
+Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')
+```
+
+The installer will:
+1. Detect your operating system and architecture
+2. Download and install OpenJDK JRE 17
+3. Download and set up Saffron
+4. Add Saffron to your PATH
+
+#### Manual Installation
+
+If you prefer manual installation:
 
 1. Download ___saffron.zip___ from the latest release in the [Releases](https://github.com/senthilvsh/saffron/releases) page.
 2. Extract the ZIP file. The extracted contents will have the following structure.
@@ -42,10 +56,10 @@ to run Saffron programs.
     ├─ saffron
     ├─ saffron.cmd
     ```
-3. Add the path of the ___saffron___ folder to the PATH environment variable
-   so that `saffron` and `saffron.cmd` are available on the PATH.
+3. Ensure you have Java 17 or higher installed and available on your PATH.
+4. Add the path of the ___saffron___ folder to the PATH environment variable.
 
-### 3. Run a Saffron program <a name="run_saffron_program"></a>
+### 2. Run a Saffron program <a name="run_saffron_program"></a>
 
 To run a Saffron program called __my-program.sfr__, use the following command.
 

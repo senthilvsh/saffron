@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script provides a universal wget/curl command to install Saffron across all platforms
+# This script provides universal one-line commands to install Saffron across all platforms
 
 # Define the installation command
 echo "==== Saffron One-Line Installation ===="
@@ -15,5 +15,9 @@ echo ""
 echo "=== For Windows (using PowerShell) ==="
 echo "powershell -Command \"Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')\""
 echo ""
-echo "These commands will automatically download and run the appropriate installer for your platform."
-echo "All installers require Java 17 or higher to be installed on your system." 
+echo "These commands will automatically download and install Saffron with a bundled Java Runtime Environment."
+echo "No Java installation is required - the installer will set up everything for you."
+echo ""
+echo "To run in test mode (no changes made):"
+echo "- Linux/macOS: Add '--whatif' to the end of the command"
+echo "- Windows: Add '-WhatIf' to the end of the command" 
