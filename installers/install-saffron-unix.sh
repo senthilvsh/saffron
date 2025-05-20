@@ -39,17 +39,18 @@ saffron_url="https://github.com/senthilvsh/saffron/releases/download/v0.1/saffro
 
 # Set JRE download URL based on OS and architecture
 jre_url=""
+jre_file_ext="tar.gz"
 if [[ "$os" == "mac" ]]; then
     if [[ "$arch" == "aarch64" ]]; then
-        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-mac-aarch64.tar.gz"
+        jre_url="https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8%2B7/OpenJDK17U-jre_aarch64_mac_hotspot_17.0.8_7.tar.gz"
     else
-        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-mac-x64.tar.gz"
+        jre_url="https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8%2B7/OpenJDK17U-jre_x64_mac_hotspot_17.0.8_7.tar.gz"
     fi
 else # linux
     if [[ "$arch" == "aarch64" ]]; then
-        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-linux-aarch64.tar.gz"
+        jre_url="https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8%2B7/OpenJDK17U-jre_aarch64_linux_hotspot_17.0.8_7.tar.gz"
     else
-        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-linux-x64.tar.gz"
+        jre_url="https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.8_7.tar.gz"
     fi
 fi
 
@@ -78,7 +79,8 @@ if ! test_bundled_jre; then
         mkdir -p "$temp_dir"
         
         # Download JRE
-        jre_archive="$temp_dir/jre.tar.gz"
+        jre_archive="$temp_dir/jre.$jre_file_ext"
+        echo "Downloading from: $jre_url"
         if command -v curl >/dev/null 2>&1; then
             curl -L -s "$jre_url" -o "$jre_archive"
         elif command -v wget >/dev/null 2>&1; then
@@ -88,16 +90,79 @@ if ! test_bundled_jre; then
             exit 1
         fi
         
+        # Check if the download was successful
+        if [ ! -s "$jre_archive" ]; then
+            echo "Error: Failed to download JRE. The downloaded file is empty."
+            exit 1
+        fi
+        
         # Extract JRE
         echo "Extracting JRE..."
         jre_temp_dir="$temp_dir/jre_extract"
         mkdir -p "$jre_temp_dir"
         
-        # Extract archive
-        tar -xzf "$jre_archive" -C "$jre_temp_dir"
+        # Extract archive - improved error handling
+        if ! tar -xzf "$jre_archive" -C "$jre_temp_dir"; then
+            echo "Error: Failed to extract JRE archive. The file may be corrupted or in an unsupported format."
+            exit 1
+        fi
         
-        # Find the JRE directory in the extracted content
-        extracted_jre_dir=$(find "$jre_temp_dir" -type d -name "jdk*" -o -name "jre*" | head -1)
+        # Find the real JRE directory by looking at multiple levels
+        # First try the direct subdirectories
+        extracted_jre_dir=$(find "$jre_temp_dir" -maxdepth 1 -type d -name "jdk*" -o -name "jre*" -o -name "OpenJDK*" | head -1)
+        
+        # If not found directly, try looking one level deeper
+        if [ -z "$extracted_jre_dir" ] || [ ! -d "$extracted_jre_dir/bin" ]; then
+            # Search deeper for directories containing /bin/java
+            possible_jre_dir=$(find "$jre_temp_dir" -type f -name "java" -path "*/bin/*" | head -1)
+            if [ -n "$possible_jre_dir" ]; then
+                # Go up two levels from bin/java to get the JRE root
+                extracted_jre_dir=$(dirname "$(dirname "$possible_jre_dir")")
+            else
+                # One more attempt - try to find jre directory at one level deeper
+                extracted_jre_dir=$(find "$jre_temp_dir" -maxdepth 2 -type d -name "jdk*" -o -name "jre*" -o -name "OpenJDK*" | head -1)
+            fi
+        fi
+        
+        # Debug output
+        echo "Contents of extract directory:"
+        ls -la "$jre_temp_dir"
+        
+        if [ -z "$extracted_jre_dir" ]; then
+            echo "Error: Could not find JRE directory in the extracted content."
+            exit 1
+        fi
+        
+        echo "Found JRE at: $extracted_jre_dir"
+        
+        # Check if we actually found a proper JRE with a bin directory
+        if [ ! -d "$extracted_jre_dir/bin" ]; then
+            echo "JRE directory found but doesn't contain a bin directory."
+            echo "Looking for nested JRE structure..."
+            
+            # Try to find a nested jre directory
+            nested_jre=$(find "$extracted_jre_dir" -maxdepth 1 -type d -name "jre" -o -name "jdk*" -o -name "OpenJDK*" | head -1)
+            if [ -n "$nested_jre" ] && [ -d "$nested_jre/bin" ]; then
+                echo "Found nested JRE at: $nested_jre"
+                extracted_jre_dir="$nested_jre"
+            else
+                # Try to find any directory with a bin/java structure
+                nested_bin=$(find "$extracted_jre_dir" -type f -name "java" -path "*/bin/*" | head -1)
+                if [ -n "$nested_bin" ]; then
+                    nested_jre_dir=$(dirname "$(dirname "$nested_bin")")
+                    echo "Found nested JRE via bin/java at: $nested_jre_dir"
+                    extracted_jre_dir="$nested_jre_dir"
+                fi
+            fi
+        fi
+        
+        # Final check for bin directory
+        if [ ! -d "$extracted_jre_dir/bin" ]; then
+            echo "Error: Cannot find a valid JRE structure with bin directory."
+            echo "Contents of the found directory:"
+            ls -la "$extracted_jre_dir"
+            exit 1
+        fi
         
         # Create final JRE directory
         if [ -d "$jre_dir" ]; then
@@ -105,15 +170,18 @@ if ! test_bundled_jre; then
         fi
         
         # Move extracted JRE to final location
-        if [ -n "$extracted_jre_dir" ]; then
-            mv "$extracted_jre_dir" "$jre_dir"
-        else
-            # If we can't find a JRE/JDK directory, use the whole extracted directory
-            mv "$jre_temp_dir" "$jre_dir"
-        fi
+        mv "$extracted_jre_dir" "$jre_dir"
         
         # Make JRE binaries executable
-        chmod +x "$jre_dir/bin/"*
+        if [ -d "$jre_dir/bin" ]; then
+            chmod +x "$jre_dir/bin/"*
+            echo "JRE binaries made executable"
+        else
+            echo "Error: bin directory not found in extracted JRE."
+            echo "Contents of JRE directory:"
+            ls -la "$jre_dir"
+            exit 1
+        fi
         
         # Clean up
         rm -f "$jre_archive"
