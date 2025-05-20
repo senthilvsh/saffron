@@ -44,7 +44,7 @@ public class StringSubString implements NativeFunction {
         double end = endValue.getValue();
 
         if (start < 0 || end >= source.length()) {
-            throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS", "Index out of bounds");
+            throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS_EXCEPTION", "Index out of bounds");
         }
 
         String result = source.substring((int) start, (int) end + 1);
