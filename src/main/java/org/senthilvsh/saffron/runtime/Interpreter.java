@@ -35,7 +35,6 @@ public class Interpreter {
             StatementResult result = new StatementResult(StatementResultType.NORMAL);
             for (Statement s : statements) {
                 result = execute(s);
-                // TODO: Check CONTINUE and BREAK are only allowed inside a loop
                 if (result.getType() != StatementResultType.NORMAL) {
                     break;
                 }
@@ -143,6 +142,7 @@ public class Interpreter {
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
             stack.newBlockScope();
+            validationStack.push(wl);
             while (conditionResult.getValue()) {
                 StatementResult result = execute(wl.getBody());
                 if (result.getType() == StatementResultType.BREAK) {
@@ -150,11 +150,26 @@ public class Interpreter {
                 }
                 conditionResult = (BooleanObj) evaluate(condition);
             }
+            validationStack.pop();
             stack.pop();
             return new StatementResult(StatementResultType.NORMAL);
-        } else if (statement instanceof BreakStatement) {
+        } else if (statement instanceof BreakStatement bs) {
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+                throw new RuntimeError(
+                        "A 'break' statement can be present only inside a loop",
+                        bs.getPosition(),
+                        bs.getLength()
+                );
+            }
             return new StatementResult(StatementResultType.BREAK);
-        } else if (statement instanceof ContinueStatement) {
+        } else if (statement instanceof ContinueStatement cs) {
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+                throw new RuntimeError(
+                        "A 'continue' statement can be present only inside a loop",
+                        cs.getPosition(),
+                        cs.getLength()
+                );
+            }
             return new StatementResult(StatementResultType.CONTINUE);
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();

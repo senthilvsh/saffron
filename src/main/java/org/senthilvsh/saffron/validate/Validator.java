@@ -82,8 +82,26 @@ public class Validator {
                         condition.getPosition(), condition.getLength());
             }
             stack.newBlockScope();
+            validationStack.push(wl);
             validate(wl.getBody());
+            validationStack.pop();
             stack.pop();
+        } else if (statement instanceof ContinueStatement cs) {
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+                throw new ValidationError(
+                        "A 'continue' statement can be present only inside a loop",
+                        cs.getPosition(),
+                        cs.getLength()
+                );
+            }
+        } else if (statement instanceof BreakStatement bs) {
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+                throw new ValidationError(
+                        "A 'break' statement can be present only inside a loop",
+                        bs.getPosition(),
+                        bs.getLength()
+                );
+            }
         } else if (statement instanceof TryCatchStatement tcs) {
             stack.newBlockScope();
             validate(tcs.getTryBlock());
