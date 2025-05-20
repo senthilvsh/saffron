@@ -4,12 +4,12 @@ This directory contains scripts to install Saffron programming language across d
 
 ## Available Scripts
 
-1. **Universal Installers**
-   - `install-saffron.sh` - The main installer that works on both Linux and macOS
-   - `install-saffron-unix.sh` - Identical to install-saffron.sh (alternative name)
+1. **Universal Installer**
+   - `install-saffron.sh` - Detects OS and architecture, then runs the appropriate installer
 
-2. **Windows Installer**
-   - `install-saffron-windows.ps1` - Windows PowerShell installation script
+2. **Platform-Specific Installers**
+   - `install-saffron-unix.sh` - Installer for Linux and macOS with bundled JRE
+   - `install-saffron-windows.ps1` - Windows PowerShell installer with bundled JRE
 
 3. **Helper Script**
    - `install-saffron-direct.sh` - Displays one-line installation commands for all platforms
@@ -37,19 +37,25 @@ Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.
 ## What the Installer Does
 
 The installer performs these steps:
-1. Checks if Java 17 or higher is installed
-2. Downloads the latest Saffron release from GitHub
-3. Extracts the package and sets up necessary files
-4. Makes sure scripts are executable
-5. Adds Saffron to your PATH environment variable 
-6. Gives instructions for completing installation
+1. Detects your operating system and architecture
+2. Downloads and installs OpenJDK JRE 17 (no need to have Java installed)
+3. Downloads the latest Saffron release from GitHub
+4. Extracts the package and sets up necessary files
+5. Creates launcher scripts that use the bundled JRE
+6. Adds Saffron to your PATH environment variable 
 
-## Requirements
+## Supported Platforms
 
-- Java 17 or higher must be installed
-- Linux/macOS: Bash shell
-- Windows: PowerShell 3.0 or higher
-- Internet connection to download Saffron
+- **Windows**: x64
+- **macOS**: x64 and ARM64 (Apple Silicon)
+- **Linux**: x64 and ARM64
+
+## Test Mode
+
+All installers support a test mode that shows what would happen without making any changes:
+
+- For Unix/macOS: `./install-saffron-unix.sh --whatif`
+- For Windows PowerShell: `./install-saffron-windows.ps1 -WhatIf`
 
 ## After Installation
 
@@ -66,4 +72,9 @@ If the `saffron` command is not found after installation:
 3. If problems persist, add the following to your shell profile manually:
    ```bash
    export PATH="$PATH:$HOME/.saffron"
-   ``` 
+   ```
+
+If you encounter JRE issues:
+1. The installer creates a bundled JRE in `$HOME/.saffron/jre`
+2. Verify this directory exists and contains Java binaries
+3. If needed, reinstall using the installer script 
