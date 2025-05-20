@@ -37,19 +37,26 @@ Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.
 ## What the Installer Does
 
 The installer performs these steps:
-1. Checks if Java 17 or higher is installed
-2. Downloads the latest Saffron release from GitHub
-3. Extracts the package and sets up necessary files
-4. Makes sure scripts are executable
+1. Creates a `.saffron` directory in your home folder
+2. Downloads and installs Java JRE 17 into the `.saffron/jre` directory
+   - **No need to install Java separately!**
+3. Downloads the latest Saffron release from GitHub
+4. Creates launcher scripts that use the bundled JRE
 5. Adds Saffron to your PATH environment variable 
 6. Gives instructions for completing installation
 
+## Features
+
+- **No Java Installation Required**: Saffron now comes with its own Java Runtime Environment
+- **Self-contained**: All Saffron components are installed in a single directory
+- **Won't Interfere**: Doesn't modify any system-wide Java installations
+- **Architecture Aware**: Automatically selects the right JRE for your system (x64, ARM64)
+
 ## Requirements
 
-- Java 17 or higher must be installed
+- Internet connection to download Saffron and JRE
 - Linux/macOS: Bash shell
 - Windows: PowerShell 3.0 or higher
-- Internet connection to download Saffron
 
 ## After Installation
 
@@ -66,4 +73,20 @@ If the `saffron` command is not found after installation:
 3. If problems persist, add the following to your shell profile manually:
    ```bash
    export PATH="$PATH:$HOME/.saffron"
-   ``` 
+   ```
+
+## Testing Mode
+
+Both installers support a testing mode:
+
+For Windows:
+```powershell
+.\install-saffron-windows.ps1 -WhatIf
+```
+
+For Linux/macOS:
+```bash
+./install-saffron-unix.sh --whatif
+```
+
+This will show what actions would be taken without actually performing them. 

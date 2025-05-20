@@ -1,63 +1,168 @@
 #!/bin/bash
 
-# Check for Java 17+
-java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
-if [[ -z "$java_version" ]]; then
-    echo "Java not found. Please install Java 17 or higher."
-    exit 1
+# Installation directory
+install_dir="$HOME/.saffron"
+jre_dir="$install_dir/jre"
+jre_bin_java="$jre_dir/bin/java"
+
+# Check if running in WhatIf mode
+WHAT_IF=false
+if [ "$1" == "--whatif" ]; then
+    WHAT_IF=true
 fi
 
-major_version=$(echo $java_version | cut -d'.' -f1)
-if [[ "$major_version" -lt 17 ]]; then
-    echo "Java version $java_version detected. Saffron requires Java 17 or higher."
-    exit 1
+# Detect platform and set JRE download URL
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    OS="mac"
+    jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-mac-x64.zip"
+else
+    OS="linux"
+    # Detect architecture
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "x86_64" ]]; then
+        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-linux-x64.zip"
+    elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+        jre_url="https://builds.openlogic.com/downloadJDK/openlogic-openjdk-jre/17.0.12+7/openlogic-openjdk-jre-17.0.12+7-linux-aarch64.zip"
+    else
+        echo "Unsupported architecture: $ARCH"
+        exit 1
+    fi
 fi
 
-echo "Java $java_version detected."
+# Saffron download URL
+saffron_url="https://github.com/senthilvsh/saffron/releases/download/v0.1/saffron.zip"
 
 # Create a clean installation directory
-install_dir="$HOME/.saffron"
 if [ -d "$install_dir" ]; then
-    echo "Removing existing installation..."
-    rm -rf "$install_dir"
+    if $WHAT_IF; then
+        echo "Would remove existing installation directory: $install_dir"
+    else
+        echo "Removing existing installation..."
+        rm -rf "$install_dir"
+    fi
 fi
-mkdir -p "$install_dir"
 
-# Download latest release
-echo "Downloading Saffron..."
-download_url="https://github.com/senthilvsh/saffron/releases/download/v0.1/saffron.zip"
-
-if command -v curl >/dev/null 2>&1; then
-    curl -L -s "$download_url" -o "/tmp/saffron.zip"
-elif command -v wget >/dev/null 2>&1; then
-    wget -q "$download_url" -O "/tmp/saffron.zip"
+if $WHAT_IF; then
+    echo "Would create directory: $install_dir"
 else
-    echo "Error: Neither curl nor wget is installed. Please install one of them and try again."
-    exit 1
+    mkdir -p "$install_dir"
 fi
 
-# Set up a temporary directory for extraction
-tmp_dir="/tmp/saffron-extract"
-rm -rf "$tmp_dir"
-mkdir -p "$tmp_dir"
+# Function to check if bundled JRE exists and works
+function test_bundled_jre {
+    if [ ! -f "$jre_bin_java" ]; then
+        return 1
+    fi
+    
+    if "$jre_bin_java" -version >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
 
-# Extract the ZIP file
-echo "Extracting..."
-unzip -q -o "/tmp/saffron.zip" -d "$tmp_dir"
-rm -f "/tmp/saffron.zip"
+# Download and install JRE if needed
+if ! test_bundled_jre; then
+    echo "Bundled JRE not found. Downloading..."
+    
+    if $WHAT_IF; then
+        echo "Would download JRE from: $jre_url"
+        echo "Would extract JRE to: $jre_dir"
+    else
+        # Create temp directory for downloads
+        temp_dir="$install_dir/temp"
+        mkdir -p "$temp_dir"
+        
+        # Download JRE
+        if command -v curl >/dev/null 2>&1; then
+            curl -L -s "$jre_url" -o "$temp_dir/jre.zip"
+        elif command -v wget >/dev/null 2>&1; then
+            wget -q "$jre_url" -O "$temp_dir/jre.zip"
+        else
+            echo "Error: Neither curl nor wget is installed. Please install one of them and try again."
+            exit 1
+        fi
+        
+        # Extract JRE
+        echo "Extracting JRE..."
+        jre_temp_dir="$temp_dir/jre_extract"
+        mkdir -p "$jre_temp_dir"
+        unzip -q -o "$temp_dir/jre.zip" -d "$jre_temp_dir"
+        
+        # Find and move the JRE directory
+        # The JRE zip might contain a parent directory
+        if [ -d "$jre_dir" ]; then
+            rm -rf "$jre_dir"
+        fi
+        
+        # Try to find directories matching jdk or jre pattern
+        jre_extracted_dir=$(find "$jre_temp_dir" -maxdepth 1 -type d -name "*jdk*" -o -name "*jre*" | grep -v "^$jre_temp_dir$" | head -1)
+        
+        if [ -n "$jre_extracted_dir" ]; then
+            # Found a JRE/JDK directory, move it to final location
+            mv "$jre_extracted_dir" "$jre_dir"
+        else
+            # If we can't find a specific directory, move the entire content
+            mkdir -p "$jre_dir"
+            mv "$jre_temp_dir"/* "$jre_dir"
+        fi
+        
+        # Make Java executable
+        chmod +x "$jre_dir/bin/java"
+        
+        # Clean up
+        rm -f "$temp_dir/jre.zip"
+        rm -rf "$jre_temp_dir"
+    fi
+fi
 
-# Copy files to installation directory
-echo "Installing Saffron..."
-cp -f "$tmp_dir/saffron/saffron.jar" "$install_dir/"
-cp -f "$tmp_dir/saffron/saffron.cmd" "$install_dir/"
-
-# Create a shell script launcher
-echo '#!/bin/sh' > "$install_dir/saffron"
-echo 'java -jar "$(dirname "$0")/saffron.jar" "$@"' >> "$install_dir/saffron"
-chmod +x "$install_dir/saffron"
-
-# Clean up
-rm -rf "$tmp_dir"
+# Download and install Saffron
+echo "Downloading Saffron..."
+if $WHAT_IF; then
+    echo "Would download Saffron from: $saffron_url"
+    echo "Would extract to: $install_dir"
+else
+    # Create temp directory for downloads
+    temp_dir="$install_dir/temp"
+    mkdir -p "$temp_dir"
+    
+    # Download Saffron
+    if command -v curl >/dev/null 2>&1; then
+        curl -L -s "$saffron_url" -o "$temp_dir/saffron.zip"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q "$saffron_url" -O "$temp_dir/saffron.zip"
+    else
+        echo "Error: Neither curl nor wget is installed. Please install one of them and try again."
+        exit 1
+    fi
+    
+    # Extract Saffron
+    echo "Extracting Saffron..."
+    unzip -q -o "$temp_dir/saffron.zip" -d "$temp_dir"
+    
+    # Copy JAR file
+    cp "$temp_dir/saffron/saffron.jar" "$install_dir/"
+    
+    # Create launcher script that uses bundled JRE
+    cat > "$install_dir/saffron" <<EOF
+#!/bin/sh
+JAVA_EXE="\$HOME/.saffron/jre/bin/java"
+if [ -x "\$JAVA_EXE" ]; then
+  "\$JAVA_EXE" -jar "\$(dirname "\$0")/saffron.jar" "\$@"
+else
+  echo "Error: Java Runtime not found in .saffron/jre directory."
+  echo "Please reinstall Saffron."
+  exit 1
+fi
+EOF
+    
+    # Make script executable
+    chmod +x "$install_dir/saffron"
+    
+    # Clean up
+    rm -f "$temp_dir/saffron.zip"
+    rm -rf "$temp_dir"
+fi
 
 # Detect shell profile file
 profile_file=""
@@ -74,8 +179,12 @@ fi
 # Add to PATH in profile
 if [ -n "$profile_file" ]; then
     if ! grep -q "export PATH=.*saffron" "$profile_file"; then
-        echo "export PATH=\"\$PATH:$install_dir\"" >> "$profile_file"
-        echo "Updated $profile_file"
+        if $WHAT_IF; then
+            echo "Would add to PATH in: $profile_file"
+        else
+            echo "export PATH=\"\$PATH:$install_dir\"" >> "$profile_file"
+            echo "Updated $profile_file"
+        fi
     fi
     source_cmd="source $profile_file"
 else
@@ -84,17 +193,12 @@ else
     source_cmd="export PATH=\"\$PATH:$install_dir\""
 fi
 
-echo "Saffron has been installed to $install_dir"
+echo "Saffron has been installed to $install_dir with its own Java Runtime Environment."
 echo "To complete installation, run:"
 echo "$source_cmd"
 echo ""
 echo "Then you can run Saffron programs using:"
 echo "saffron \"program.sfr\""
 echo ""
-echo "Testing installation..."
-export PATH="$PATH:$install_dir"
-if command -v saffron >/dev/null 2>&1; then
-    echo "Success! Saffron is now available in your current shell."
-else
-    echo "Warning: 'saffron' command not found in PATH. Please run the source command above."
-fi 
+echo "For immediate use without restarting, you can run:"
+echo "export PATH=\"\$PATH:$install_dir\"" 
