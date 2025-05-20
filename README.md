@@ -18,24 +18,31 @@ string manipulation and data conversions.
 
 Follow the steps below to setup and run Saffron programs.
 
-### 1. Installation
+### 1. Install
 
 #### One-line Installation (Recommended)
 
 Saffron comes with a bundled Java Runtime Environment - no separate Java installation required!
 
 **For Linux/macOS:**
+
+Using __curl__:
 ```bash
-curl -sSL https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+curl -sSL \
+https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
 ```
-or using wget:
+
+...or using __wget__:
 ```bash
-wget -qO- https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+wget -qO- \
+https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
 ```
 
 **For Windows (PowerShell):**
 ```powershell
-Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')
+Invoke-Expression `
+(New-Object System.Net.WebClient).DownloadString( `
+'https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')
 ```
 
 The installer will:
@@ -66,6 +73,13 @@ To run a Saffron program called __my-program.sfr__, use the following command.
 ```shell
 saffron "my-program.sfr"
 ```
+
+### 3. Uninstall
+
+To uninstall Saffron:
+
+1. Delete the __.saffron__ directory from your user home folder.
+2. Remove the path of the above directory from the PATH environment variable.
 
 
 ## User Guide
