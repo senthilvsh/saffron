@@ -5,13 +5,9 @@ import org.senthilvsh.saffron.common.Frame;
 import org.senthilvsh.saffron.common.FrameStack;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
-import org.senthilvsh.saffron.runtime.StringObj;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.senthilvsh.saffron.common.Type.STRING;
@@ -21,7 +17,7 @@ public class Validator {
     private final FrameStack stack = new FrameStack();
     private final Map<String, FunctionDefinition> functions = new HashMap<>();
 
-    private FunctionDefinition functionUnderEvaluation = null;
+    private final Stack<Statement> validationStack = new Stack<>();
 
     public Validator() {
         functions.putAll(NativeFunctionsRegistry.getAll());
@@ -43,19 +39,25 @@ public class Validator {
                 validate(s);
             }
         } else if (statement instanceof ReturnStatement rs) {
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
+                throw new ValidationError(
+                        "A 'return' statement can only be present inside a function",
+                        rs.getPosition(),
+                        rs.getLength()
+                );
+            }
             Expression expression = rs.getExpression();
             Type type = VOID;
             if (expression != null) {
                 type = getType(expression);
             }
-            if (functionUnderEvaluation != null) {
-                Type returnType = functionUnderEvaluation.getReturnType();
-                if (type != returnType) {
-                    throw new ValidationError(
-                            String.format("Must return a value of type '%s'", returnType.getName()),
-                            rs.getPosition(),
-                            rs.getLength());
-                }
+
+            Type returnType = containingFunction.getReturnType();
+            if (type != returnType) {
+                throw new ValidationError(
+                        String.format("Must return a value of type '%s'", returnType.getName()),
+                        rs.getPosition(),
+                        rs.getLength());
             }
         } else if (statement instanceof ConditionalStatement cs) {
             Expression condition = cs.getCondition();
@@ -165,13 +167,12 @@ public class Validator {
             }
             functions.put(signature, fd);
 
-            // Set current definition as being evaluated
-            functionUnderEvaluation = fd;
+            validationStack.push(fd);
 
             // Validate body (including return statements)
             validate(fd.getBody());
 
-            functionUnderEvaluation = null;
+            validationStack.pop();
 
             // Pop frame
             stack.pop();

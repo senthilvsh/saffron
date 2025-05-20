@@ -7,17 +7,13 @@ import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Interpreter {
+    private final Stack<Statement> validationStack = new Stack<>();
     private final FrameStack stack = new FrameStack();
     private final Map<String, FunctionDefinition> functions = new HashMap<>();
-
-    private FunctionDefinition functionUnderEvaluation = null;
 
     public Interpreter() {
         functions.putAll(NativeFunctionsRegistry.getAll());
@@ -46,13 +42,27 @@ public class Interpreter {
             }
             return result;
         } else if (statement instanceof ReturnStatement rs) {
-            // TODO: Check RETURN statement is only allowed inside a function
+            if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
+                throw new RuntimeError(
+                        "A 'return' statement can only be present inside a function",
+                        rs.getPosition(),
+                        rs.getLength()
+                );
+            }
             Expression expression = rs.getExpression();
             BaseObj returnValue = null;
             if (expression != null) {
                 returnValue = evaluate(expression);
             }
-            // TODO: Check whether computed return value matches the function definition's return value
+
+            if (returnValue != null && returnValue.getType() != containingFunction.getReturnType()) {
+                throw new RuntimeError(
+                        "The type of the return value does not match the function's return type",
+                        rs.getPosition(),
+                        rs.getLength()
+                );
+            }
+
             return new ReturnStatementResult(returnValue);
         } else if (statement instanceof ConditionalStatement cs) {
             Expression condition = cs.getCondition();
@@ -239,14 +249,15 @@ public class Interpreter {
             for (int i = 0; i < arguments.size(); i++) {
                 frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), true));
             }
-            functionUnderEvaluation = fd;
+
+            validationStack.push(fd);
 
             StatementResult result;
             if (fd instanceof NativeFunctionDefinition nfd) {
                 try {
                     result = nfd.getFunction().run(frame);
                 } catch (NativeFunctionException ex) {
-                    functionUnderEvaluation = null;
+                    validationStack.pop();
                     stack.pop();
                     throw ex;
                 }
@@ -254,7 +265,7 @@ public class Interpreter {
                 result = execute(functions.get(signature).getBody());
             }
 
-            functionUnderEvaluation = null;
+            validationStack.pop();
             stack.pop();
 
             if (result instanceof ReturnStatementResult rsr) {
