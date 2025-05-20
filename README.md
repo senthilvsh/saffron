@@ -3,14 +3,14 @@
 
 ## Introduction
 
-Saffron is a simple, type-safe, interpreted, general-purpose programming language.
+Saffron is a simple, type-safe, general-purpose programming language.
 
-The language provides three basic data types (Number, String and Boolean) and basic
-programming constructs like conditional statements, loops and functions.
+The language provides a few basic data types (Number, String and Boolean) and 
+simple programming constructs like conditional statements, loops and functions.
 
-It provides [type safety](#type_safety) by making a series of checks before starting execution.
+It provides [type safety](#type-safety) by making a series of checks before starting execution.
 
-It also comes with a standard library of functions that support console I/O,
+It also comes with a [standard library](#standard-library) of functions that support console I/O,
 string manipulation and data conversions.
 
 
@@ -22,7 +22,7 @@ Follow the steps below to setup and run Saffron programs.
 
 #### One-line Installation (Recommended)
 
-Saffron now comes with bundled Java Runtime Environment - no separate Java installation required!
+Saffron comes with a bundled Java Runtime Environment - no separate Java installation required!
 
 **For Linux/macOS:**
 ```bash
@@ -41,7 +41,7 @@ Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.
 The installer will:
 1. Detect your operating system and architecture
 2. Download and install OpenJDK JRE 17
-3. Download and set up Saffron
+3. Download and setup Saffron
 4. Add Saffron to your PATH
 
 #### Manual Installation
@@ -59,7 +59,7 @@ If you prefer manual installation:
 3. Ensure you have Java 17 or higher installed and available on your PATH.
 4. Add the path of the ___saffron___ folder to the PATH environment variable.
 
-### 2. Run a Saffron program <a name="run_saffron_program"></a>
+### 2. Run a Saffron program <a name="run-saffron-program"></a>
 
 To run a Saffron program called __my-program.sfr__, use the following command.
 
@@ -72,9 +72,9 @@ saffron "my-program.sfr"
 
 This section will walk you through the language features and standard library functions
 using example programs. You can copy the code in each example below and run it as described in the
-[Run a Saffron program](#run_saffron_program) section above.
+[Run a Saffron program](#run-saffron-program) section above.
 
-### 1. Hello World
+### 1. First Program
 
 ```
 writeln("Saffron is awesome!");
@@ -141,7 +141,6 @@ var str_val:str = readln();
 var num_val:num = to_num(str_val);
 
 writeln("I doubled your number: " + num_val * 2);
-
 ```
 
 The `to_num()` function is used to convert a string to a number.
@@ -241,9 +240,10 @@ Note that __void__ is not a proper data type i.e, it cannot be used in variable 
 It is used only in the case of functions that do not return any value.
 
 
-## Type Safety <a name="type_safety"></a>
+## Type Safety <a name="type-safety"></a>
 
-Saffron is a type-safe language. Before running a program, it is validated to find all type-related errors.
+Saffron is a type-safe language. It makes a number of validations before running a program, to find type-related
+and other errors.
 
 All variables must be declared before being used.
 ```
@@ -257,12 +257,12 @@ A variable cannot be redeclared in the same scope
 var a:num = 10;
 var a:num = 20;    // error, 'a' is already declared in this scope
 
-fun test():void {
+fun test(): void {
     var a:num = 20;    // OK, because a function introduces a new scope
 }
 ```
 
-All variables must have a type specified.
+All variables must specify their type.
 ```
 var a = 10; // error
 ```
@@ -280,7 +280,7 @@ var a:num = 12 * "abcd"; // error, cannot multiply number and string
 var b:str = -"abcd";     // error, unary - not allowed for string
 ```
 
-All functions must declare a return type.
+All functions must specify a return type.
 ```
 fun test() {    // error, missing return type
 }
@@ -302,9 +302,9 @@ fun add(a: num, b: num): num {
 var res:num = add("1", 2);    // error, type of 1st argument doesn't match the declared type
 ```
 
-## Standard Library
+## Standard Library <a name="standard-library"></a>
 
-The Saffron Standard Library provides a minimal set of functions to perform 
+Saffron comes with a standard library of functions that provide support for  
 console I/O, string manipulation and data conversion.
 
 ### Console

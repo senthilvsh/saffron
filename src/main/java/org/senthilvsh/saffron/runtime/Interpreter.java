@@ -39,13 +39,14 @@ public class Interpreter {
             StatementResult result = new StatementResult(StatementResultType.NORMAL);
             for (Statement s : statements) {
                 result = execute(s);
-                // TODO: Check CONTINUE and BREAK are only allowed in loops
+                // TODO: Check CONTINUE and BREAK are only allowed inside a loop
                 if (result.getType() != StatementResultType.NORMAL) {
                     break;
                 }
             }
             return result;
         } else if (statement instanceof ReturnStatement rs) {
+            // TODO: Check RETURN statement is only allowed inside a function
             Expression expression = rs.getExpression();
             BaseObj returnValue = null;
             if (expression != null) {
@@ -250,7 +251,6 @@ public class Interpreter {
                     throw ex;
                 }
             } else {
-                // TODO: Provide specialized function-body statement
                 result = execute(functions.get(signature).getBody());
             }
 

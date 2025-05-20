@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import static org.senthilvsh.saffron.parser.TokenType.*;
 
 public class Parser {
-    private final List<ParseError> errors = new ArrayList<>();
     private final List<Token> tokens = new ArrayList<>();
     private int tokenIdx = 0;
     private Token lookahead;
@@ -32,135 +31,43 @@ public class Parser {
         }
     }
 
-    public ParseResult parse() throws ParseError {
+    public Program parse() throws ParseError {
         List<Statement> statements = new ArrayList<>();
         while (lookahead != null) {
-            try {
-                statements.add(statement());
-            } catch (ParseError e) {
-                errors.add(e);
-                // TODO: Remove this try-catch once all individual statement-parsing methods handle it
-                while (lookahead != null && !lookahead.getValue().equals(";")) {
-                    consume();
-                }
-                consume(TokenType.SYMBOL, new String[]{";"});
-            }
+            statements.add(statement());
         }
-        return new ParseResult(new Program(statements), errors);
+        return new Program(statements);
     }
 
     Statement statement() throws ParseError {
         assertLookAheadNotNull();
 
-        // TODO: Move to separate function and handle errors
-        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("var")) {
-            Token varKeyword = consume(TokenType.KEYWORD, new String[]{"var"});
-            Token variableName = consume(TokenType.IDENTIFIER);
-            consume(TokenType.SYMBOL, new String[]{":"});
-            Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
-
-            Expression expression = null;
-
-            // Variable Initialization
-            assertLookAheadNotNull();
-            if (lookahead.getValue().equals("=")) {
-                consume(OPERATOR, new String[]{"="});
-                expression = expression();
-            }
-
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-
-            return new VariableDeclaration(variableName.getValue(), typeSpecifier.getValue(), expression,
-                    varKeyword.getPosition(), semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition());
-        }
-
-        // TODO: Move to separate function and handle errors
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("fun")) {
-            Token funKeyword = consume(TokenType.KEYWORD, new String[]{"fun"});
-            Token functionName = consume(TokenType.IDENTIFIER);
-
-            consume(TokenType.SYMBOL, new String[]{"("});
-
-            List<FunctionArgument> arguments = new ArrayList<>();
-
-            assertLookAheadNotNull();
-            while (!lookahead.getValue().equals(")")) {
-                Token argName = consume(IDENTIFIER);
-                consume(SYMBOL, new String[]{":"});
-                Token type = consume(KEYWORD, new String[]{"num", "str", "bool"});
-                arguments.add(new FunctionArgument(argName.getValue(), Type.of(type.getValue())));
-                if (!lookahead.getValue().equals(",")) {
-                    break;
-                }
-                consume(SYMBOL, new String[]{","});
-            }
-
-            consume(TokenType.SYMBOL, new String[]{")"});
-            consume(TokenType.SYMBOL, new String[]{":"});
-            Token returnType = consume(KEYWORD, new String[]{"void", "num", "str", "bool"});
-
-            Statement body = blockStatement();
-
-            return new FunctionDefinition(
-                    functionName.getValue(),
-                    arguments,
-                    (BlockStatement) body,
-                    Type.of(returnType.getValue()),
-                    funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition(),
-                    functionName.getPosition(),
-                    functionName.getLength());
+            return functionDefinition();
         }
 
-        // TODO: Move to separate function and handle errors
+        if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("var")) {
+            return variableDeclarationStatement();
+        }
+
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("return")) {
-            Token returnKeyword = consume(TokenType.KEYWORD, new String[]{"return"});
-            Expression expression = null;
-            assertLookAheadNotNull();
-            if (!lookahead.getValue().equals(";")) {
-                expression = expression();
-            }
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new ReturnStatement(expression, returnKeyword.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - returnKeyword.getPosition());
+            return returnStatement();
         }
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("if")) {
-            return ifStatement();
+            return conditionalStatement();
         }
 
-        // TODO: Move to separate function and handle errors
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("while")) {
-            Token whileKeyword = consume(TokenType.KEYWORD, new String[]{"while"});
-            consume(TokenType.SYMBOL, new String[]{"("});
-            Expression condition = equalityExpression();
-            consume(TokenType.SYMBOL, new String[]{")"});
-            Statement loopBody = statement();
-            return new WhileLoop(
-                    condition,
-                    loopBody,
-                    whileKeyword.getPosition(),
-                    loopBody.getPosition() + loopBody.getLength() - whileKeyword.getPosition()
-            );
+            return whileStatement();
         }
 
-        // TODO: Move to separate function and handle errors
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("continue")) {
-            Token continueKeyword = consume(TokenType.KEYWORD, new String[]{"continue"});
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new ContinueStatement(
-                    continueKeyword.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - continueKeyword.getPosition()
-            );
+            return continueStatement();
         }
 
-        // TODO: Move to separate function and handle errors
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("break")) {
-            Token breakKeyword = consume(TokenType.KEYWORD, new String[]{"break"});
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new BreakStatement(
-                    breakKeyword.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - breakKeyword.getPosition()
-            );
+            return breakStatement();
         }
 
         if (lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("try")) {
@@ -172,6 +79,142 @@ public class Parser {
         }
 
         return expressionStatement();
+    }
+
+    Statement functionDefinition() throws ParseError {
+        Token funKeyword = consume(TokenType.KEYWORD, new String[]{"fun"});
+        Token functionName = consume(TokenType.IDENTIFIER);
+
+        consume(TokenType.SYMBOL, new String[]{"("});
+
+        List<FunctionArgument> arguments = new ArrayList<>();
+
+        assertLookAheadNotNull();
+        while (!lookahead.getValue().equals(")")) {
+            Token argName = consume(IDENTIFIER);
+            consume(SYMBOL, new String[]{":"});
+            Token type = consume(KEYWORD, new String[]{"num", "str", "bool"});
+            arguments.add(new FunctionArgument(argName.getValue(), Type.of(type.getValue())));
+            if (!lookahead.getValue().equals(",")) {
+                break;
+            }
+            consume(SYMBOL, new String[]{","});
+        }
+
+        consume(TokenType.SYMBOL, new String[]{")"});
+        consume(TokenType.SYMBOL, new String[]{":"});
+        Token returnType = consume(KEYWORD, new String[]{"void", "num", "str", "bool"});
+
+        Statement body = blockStatement();
+
+        return new FunctionDefinition(
+                functionName.getValue(),
+                arguments,
+                (BlockStatement) body,
+                Type.of(returnType.getValue()),
+                funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition(),
+                functionName.getPosition(),
+                functionName.getLength()
+        );
+    }
+
+    Statement variableDeclarationStatement() throws ParseError {
+        Token varKeyword = consume(TokenType.KEYWORD, new String[]{"var"});
+        Token variableName = consume(TokenType.IDENTIFIER);
+        consume(TokenType.SYMBOL, new String[]{":"});
+        Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
+
+        Expression expression = null;
+
+        // Variable Initialization
+        assertLookAheadNotNull();
+        if (lookahead.getValue().equals("=")) {
+            consume(OPERATOR, new String[]{"="});
+            expression = expression();
+        }
+
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+
+        return new VariableDeclaration(
+                variableName.getValue(),
+                typeSpecifier.getValue(),
+                expression,
+                varKeyword.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition()
+        );
+    }
+
+    Statement returnStatement() throws ParseError {
+        Token returnKeyword = consume(TokenType.KEYWORD, new String[]{"return"});
+        Expression expression = null;
+        assertLookAheadNotNull();
+        if (!lookahead.getValue().equals(";")) {
+            expression = expression();
+        }
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+        return new ReturnStatement(
+                expression,
+                returnKeyword.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - returnKeyword.getPosition()
+        );
+    }
+
+    Statement conditionalStatement() throws ParseError {
+        Token ifKeyword = consume(TokenType.KEYWORD, new String[]{"if"});
+        consume(TokenType.SYMBOL, new String[]{"("});
+        Expression condition = equalityExpression();
+        consume(TokenType.SYMBOL, new String[]{")"});
+        Statement trueClause = statement();
+        if (lookahead == null || !(lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("else"))) {
+            return new ConditionalStatement(
+                    condition,
+                    trueClause,
+                    null,
+                    ifKeyword.getPosition(),
+                    trueClause.getPosition() + trueClause.getLength() - ifKeyword.getPosition()
+            );
+        }
+        consume(TokenType.KEYWORD, new String[]{"else"});
+        Statement falseClause = statement();
+        return new ConditionalStatement(
+                condition,
+                trueClause,
+                falseClause,
+                ifKeyword.getPosition(),
+                falseClause.getPosition() + falseClause.getLength() - ifKeyword.getPosition()
+        );
+    }
+
+    Statement whileStatement() throws ParseError {
+        Token whileKeyword = consume(TokenType.KEYWORD, new String[]{"while"});
+        consume(TokenType.SYMBOL, new String[]{"("});
+        Expression condition = equalityExpression();
+        consume(TokenType.SYMBOL, new String[]{")"});
+        Statement loopBody = statement();
+        return new WhileLoop(
+                condition,
+                loopBody,
+                whileKeyword.getPosition(),
+                loopBody.getPosition() + loopBody.getLength() - whileKeyword.getPosition()
+        );
+    }
+
+    Statement continueStatement() throws ParseError {
+        Token continueKeyword = consume(TokenType.KEYWORD, new String[]{"continue"});
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+        return new ContinueStatement(
+                continueKeyword.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - continueKeyword.getPosition()
+        );
+    }
+
+    Statement breakStatement() throws ParseError {
+        Token breakKeyword = consume(TokenType.KEYWORD, new String[]{"break"});
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+        return new BreakStatement(
+                breakKeyword.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - breakKeyword.getPosition()
+        );
     }
 
     Statement tryCatchStatement() throws ParseError {
@@ -207,74 +250,28 @@ public class Parser {
         );
     }
 
-    // TODO: Handle errors
-    Statement ifStatement() throws ParseError {
-        Token ifKeyword = consume(TokenType.KEYWORD, new String[]{"if"});
-        consume(TokenType.SYMBOL, new String[]{"("});
-        Expression condition = equalityExpression();
-        consume(TokenType.SYMBOL, new String[]{")"});
-        Statement trueClause = statement();
-        if (lookahead == null || !(lookahead.getType() == TokenType.KEYWORD && lookahead.getValue().equals("else"))) {
-            return new ConditionalStatement(
-                    condition,
-                    trueClause,
-                    null,
-                    ifKeyword.getPosition(),
-                    trueClause.getPosition() + trueClause.getLength() - ifKeyword.getPosition()
-            );
+    Statement blockStatement() throws ParseError {
+        Token open = consume(TokenType.SYMBOL, new String[]{"{"});
+        List<Statement> statements = new ArrayList<>();
+        while (!lookahead.getValue().equals("}")) {
+            statements.add(statement());
         }
-        consume(TokenType.KEYWORD, new String[]{"else"});
-        Statement falseClause = statement();
-        return new ConditionalStatement(
-                condition,
-                trueClause,
-                falseClause,
-                ifKeyword.getPosition(),
-                falseClause.getPosition() + falseClause.getLength() - ifKeyword.getPosition()
+        Token close = consume(TokenType.SYMBOL, new String[]{"}"});
+        return new BlockStatement(
+                statements,
+                open.getPosition(),
+                close.getPosition() + close.getLength() - open.getPosition()
         );
     }
 
     Statement expressionStatement() throws ParseError {
-        assertLookAheadNotNull();
-        int start = lookahead.getPosition();
-        try {
-            Expression expression = expression();
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new ExpressionStatement(expression, expression.getPosition(),
-                    semicolon.getPosition() + semicolon.getLength() - expression.getPosition());
-        } catch (ParseError e) {
-            errors.add(e);
-            while (lookahead != null && !lookahead.getValue().equals(";")) {
-                consume();
-            }
-            Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
-            return new InvalidStatement(start, semicolon.getPosition() + semicolon.getLength() - start);
-        }
-    }
-
-    Statement blockStatement() throws ParseError {
-        assertLookAheadNotNull();
-        int start = lookahead.getPosition();
-        try {
-            Token open = consume(TokenType.SYMBOL, new String[]{"{"});
-            List<Statement> statements = new ArrayList<>();
-            while (!lookahead.getValue().equals("}")) {
-                statements.add(statement());
-            }
-            Token close = consume(TokenType.SYMBOL, new String[]{"}"});
-            return new BlockStatement(
-                    statements,
-                    open.getPosition(),
-                    close.getPosition() + close.getLength() - open.getPosition()
-            );
-        } catch (ParseError e) {
-            errors.add(e);
-            while (lookahead != null && !lookahead.getValue().equals("}")) {
-                consume();
-            }
-            Token closeCurly = consume(TokenType.SYMBOL, new String[]{"}"});
-            return new InvalidStatement(start, closeCurly.getPosition() + closeCurly.getLength() - start);
-        }
+        Expression expression = expression();
+        Token semicolon = consume(TokenType.SYMBOL, new String[]{";"});
+        return new ExpressionStatement(
+                expression,
+                expression.getPosition(),
+                semicolon.getPosition() + semicolon.getLength() - expression.getPosition()
+        );
     }
 
     Expression expression() throws ParseError {
@@ -299,7 +296,7 @@ public class Parser {
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
-        // TODO: Dedicated class for assignment expression
+        // TODO: Provice a dedicated class for assignment expression
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 
@@ -489,16 +486,6 @@ public class Parser {
         }
 
         throw new ParseError("Expected a Number, String or Boolean literal", lookahead.getPosition(), lookahead.getLength());
-    }
-
-    void consume() throws ParseError {
-        assertLookAheadNotNull();
-        tokenIdx++;
-        if (tokenIdx >= tokens.size()) {
-            lookahead = null;
-        } else {
-            lookahead = tokens.get(tokenIdx);
-        }
     }
 
     Token consume(TokenType type) throws ParseError {

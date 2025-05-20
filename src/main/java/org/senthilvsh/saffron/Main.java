@@ -2,8 +2,6 @@ package org.senthilvsh.saffron;
 
 import org.senthilvsh.saffron.ast.Program;
 import org.senthilvsh.saffron.common.SaffronException;
-import org.senthilvsh.saffron.parser.ParseError;
-import org.senthilvsh.saffron.parser.ParseResult;
 import org.senthilvsh.saffron.parser.Parser;
 import org.senthilvsh.saffron.runtime.Interpreter;
 import org.senthilvsh.saffron.runtime.RuntimeError;
@@ -27,9 +25,10 @@ public class Main {
         }
 
         if (args[0].trim().equals("--version") || args[0].trim().equals("--help")) {
+            // TODO: Externalize version number
             System.out.println("Saffron v0.1");
             System.out.println();
-            System.out.println("Saffron is a simple, type-safe, interpreted, general-purpose programming language.");
+            System.out.println("Saffron is a simple, type-safe, general-purpose programming language.");
             return;
         }
 
@@ -43,19 +42,10 @@ public class Main {
             return;
         }
 
-        Parser parser = new Parser(source);
-        Validator validator = new Validator();
-        Interpreter interpreter = new Interpreter();
         try {
-            ParseResult result = parser.parse();
-            for (ParseError e : result.getErrors()) {
-                printError(e, source);
-            }
-            Program program = result.getProgram();
-            // TODO: Do not validate if there are parse errors
-            validator.validate(program);
-            // TODO: Do not run program if there are parse or validation errors
-            interpreter.execute(program);
+            Program program = new Parser(source).parse();
+            new Validator().validate(program);
+            new Interpreter().execute(program);
         } catch (SaffronException e) {
             printError(e, source);
         }
