@@ -18,7 +18,7 @@ echo ""
 echo -e "${YELLOW}Checking syntax of installers...${NC}"
 
 # Check Unix installer syntax
-if bash -n installers/install-saffron-unix.sh; then
+if bash -n installers/linux.sh; then
     echo -e "${GREEN}✅ Unix installer syntax is valid${NC}"
 else
     echo -e "${RED}❌ Unix installer has syntax errors${NC}"
@@ -26,7 +26,7 @@ else
 fi
 
 # Check universal installer syntax
-if bash -n installers/install-saffron.sh; then
+if bash -n installers/install.sh; then
     echo -e "${GREEN}✅ Universal installer syntax is valid${NC}"
 else
     echo -e "${RED}❌ Universal installer has syntax errors${NC}"
@@ -34,7 +34,7 @@ else
 fi
 
 # Check direct installer syntax
-if bash -n installers/install-saffron-direct.sh; then
+if bash -n installers/help.sh; then
     echo -e "${GREEN}✅ Direct installer syntax is valid${NC}"
 else
     echo -e "${RED}❌ Direct installer has syntax errors${NC}"
@@ -49,7 +49,7 @@ echo ""
 echo -e "${YELLOW}Testing Unix installer in --whatif mode...${NC}"
 
 # Run the unix installer with --whatif flag and capture output
-UNIX_TEST_OUTPUT=$(bash installers/install-saffron-unix.sh --whatif)
+UNIX_TEST_OUTPUT=$(bash installers/linux.sh --whatif)
 
 # Check for expected strings in --whatif output
 check_unix_installer() {
@@ -78,7 +78,7 @@ echo ""
 echo -e "${YELLOW}Testing universal installer in --whatif mode...${NC}"
 
 # Run the universal installer with --whatif flag and capture output
-UNIVERSAL_TEST_OUTPUT=$(bash installers/install-saffron.sh --whatif)
+UNIVERSAL_TEST_OUTPUT=$(bash installers/install.sh --whatif)
 
 # Check for expected strings in --whatif output
 check_universal_installer() {
@@ -106,7 +106,7 @@ echo ""
 echo -e "${YELLOW}Checking direct installer for completeness...${NC}"
 
 # Run the direct installer and capture output
-DIRECT_TEST_OUTPUT=$(bash installers/install-saffron-direct.sh)
+DIRECT_TEST_OUTPUT=$(bash installers/help.sh)
 
 # Check for expected strings in output
 check_direct_installer() {
@@ -139,6 +139,6 @@ echo -e "${GREEN}✅ Installers are ready for use.${NC}"
 echo ""
 echo "To install Saffron in a real environment, use one of these commands:"
 echo ""
-echo "  Linux/macOS: ./installers/install-saffron.sh"
-echo "  Windows: powershell ./installers/install-saffron-windows.ps1"
+echo "  Linux/macOS: ./installers/install.sh"
+echo "  Windows: powershell ./installers/windows.ps1"
 echo "" 

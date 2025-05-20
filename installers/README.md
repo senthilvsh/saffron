@@ -5,14 +5,14 @@ This directory contains scripts to install Saffron programming language across d
 ## Available Scripts
 
 1. **Universal Installer**
-   - `install-saffron.sh` - Detects OS and architecture, then runs the appropriate installer
+   - `install.sh` - Detects OS and architecture, then runs the appropriate installer
 
 2. **Platform-Specific Installers**
-   - `install-saffron-unix.sh` - Installer for Linux and macOS with bundled JRE
-   - `install-saffron-windows.ps1` - Windows PowerShell installer with bundled JRE
+   - `linux.sh` - Installer for Linux and macOS with bundled JRE
+   - `windows.ps1` - Windows PowerShell installer with bundled JRE
 
 3. **Helper Script**
-   - `install-saffron-direct.sh` - Displays one-line installation commands for all platforms
+   - `help.sh` - Displays one-line installation commands for all platforms
 
 ## How to Install
 
@@ -20,18 +20,18 @@ This directory contains scripts to install Saffron programming language across d
 
 **One-line installation command:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+curl -sSL https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/saffron.sh | bash
 ```
 or using wget:
 ```bash
-wget -qO- https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron.sh | bash
+wget -qO- https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/saffron.sh | bash
 ```
 
 ### For Windows Users
 
 **One-line installation command (PowerShell):**
 ```powershell
-Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')
+Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install/windows.ps1')
 ```
 
 ## What the Installer Does
@@ -54,8 +54,8 @@ The installer performs these steps:
 
 All installers support a test mode that shows what would happen without making any changes:
 
-- For Unix/macOS: `./install-saffron-unix.sh --whatif`
-- For Windows PowerShell: `./install-saffron-windows.ps1 -WhatIf`
+- For Unix/macOS: `./linux.sh --whatif`
+- For Windows PowerShell: `./windows.ps1 -WhatIf`
 
 ## After Installation
 

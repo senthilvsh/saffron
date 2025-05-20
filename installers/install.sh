@@ -7,7 +7,7 @@ detect_os() {
         echo "This script cannot be used on Windows."
         echo "Please use PowerShell and run the following command instead:"
         echo ""
-        echo "Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install-saffron-windows.ps1')"
+        echo "Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/windows.ps1')"
         exit 1
     elif [[ "$(uname)" == "Darwin" ]]; then
         echo "macOS detected."
@@ -39,4 +39,4 @@ detect_arch
 
 # Run the Unix installer
 echo "Starting Saffron installation for $os ($arch)..."
-bash "$(dirname "$0")/install-saffron-unix.sh" $pass_args 
+bash "$(dirname "$0")/linux.sh" $pass_args
