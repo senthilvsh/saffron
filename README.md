@@ -20,7 +20,7 @@ Follow the steps below to setup and run Saffron programs.
 
 ### 1. Install
 
-#### One-line Installation (Recommended)
+#### Automatic Installation (Recommended)
 
 Saffron comes with a bundled Java Runtime Environment - no separate Java installation required!
 
@@ -85,10 +85,9 @@ To uninstall Saffron:
 ## User Guide
 
 This section will walk you through the language features and standard library functions
-using example programs. You can copy the code in each example below and run it as described in the
-[Run a Saffron program](#run-saffron-program) section above.
+using example programs. You can copy the code in each example below and run it.
 
-### 1. First Program
+### First Program
 
 ```
 writeln("Saffron is awesome!");
@@ -97,7 +96,7 @@ writeln("Saffron is awesome!");
 The above program writes a string to the console. The `writeln()` function is a standard library function
 that prints a given value to the console.
 
-### 2. Variables
+### Variables
 
 ```
 var message:str;
@@ -132,7 +131,7 @@ var is_found:bool = false;
 writeln(is_found);
 ```
 
-### 3. Console I/O
+### User Input
 
 ```
 write("Enter your name: ");
@@ -145,7 +144,8 @@ writeln("Namaste " + user + "!");
 The `readln()` function reads one line of text from the console. Also note the use
 of `write` instead of `writeln`. The former will NOT add a new-line character at the end.
 
-### 4. Parse string as a number
+
+### Parse Strings
 
 ```
 write("Enter a number: ");
@@ -159,7 +159,41 @@ writeln("I doubled your number: " + num_val * 2);
 
 The `to_num()` function is used to convert a string to a number.
 
-### 5. Conditional statements
+
+### Handle Exceptions
+
+Sometimes, a built-in function will throw an exception if any input is invalid.
+In the above example, if the user input is not a valid number, an exception will
+be thrown and the program will terminate.
+
+These exceptions can be handled using the `try...catch` statement.
+
+```
+write("Enter a number: ");
+
+var inp:str = readln();      // Enter 'abcd' as input
+
+writeln(to_num(inp) * 2);    // Will throw exception and terminate 
+
+// BUT, using a try...catch block, we can handle the exception
+try {
+   writeln(to_num(inp) * 2);
+} catch (type:str, msg:str) {
+   if (type == "FORMAT_EXCEPTION") {
+      writeln(inp + " is not a proper number!");
+   }
+}
+
+```
+
+A catch statement MUST have two and ONLY two parameters and both of them must of
+of ___string___ type. The first parameter will have the type of exception and
+ the second parameter will have the message describing the exception.
+
+___The documentation for each standard library function will list the type of exceptions
+thrown by that function.___
+
+### Conditional Statements
 
 ```
 write("Enter first number: ");
@@ -181,7 +215,7 @@ The `if` keyword is used to execute a block of statements if a condition is true
 The `else` keyword is used to execute a block of statements if the above condition is false.
 You can also chain if-else statements to check a series of conditions as shown above.
 
-### 6. Loops
+### Loops
 
 ```
 var i:num = 1;
@@ -214,7 +248,7 @@ In the above program, we check whether the current value of `i` is an even numbe
 and skip the current iteration using the `continue` statement. Similarly, a `break` statement 
 can be used to exit a loop.
 
-### 7. Functions
+### Functions
 
 ```
 fun greet(user: str): str {
@@ -373,6 +407,9 @@ the ___start___ position till the end of the ___source___ string.
 Positions are zero-based i.e., the position of the first character is ___0___ 
 and the position of the last character is ___length - 1___.
 
+Throws `INDEX_OUT_OF_BOUNDS_EXCEPTION` if the value of ___start___ or ___end___ is outside
+the range `[0 to length-1]`.
+
 ```
 str_substr(source: str, start: num): str
 str_substr(source: str, start: num, end: num): str
@@ -428,7 +465,7 @@ str_endswith(source: str, search: str): bool
 
 Parse the ___source___ string as a number.
 
-Throws an exception if ___source___ is not in a valid number format.
+Throws `FORMAT_EXCEPTION` if ___source___ is not in a valid number format.
 
 ```
 to_num(source: str): num
@@ -438,7 +475,7 @@ to_num(source: str): num
 
 Parse the ___source___ string as a boolean.
 
-Throws an exception if ___source___ is not a valid boolean value.
+Throws `FORMAT_EXCEPTION` if ___source___ is not a valid boolean value.
 
 ```
 to_bool(source: str): bool

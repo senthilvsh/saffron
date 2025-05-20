@@ -39,7 +39,7 @@ public class StringSubStringToEnd implements NativeFunction {
         double start = startObj.getValue();
 
         if (start < 0) {
-            throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS", "Index out of bounds");
+            throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS_EXCEPTION", "Index out of bounds");
         }
 
         String result = source.substring((int) start);
