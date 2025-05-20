@@ -183,7 +183,6 @@ try {
       writeln(inp + " is not a proper number!");
    }
 }
-
 ```
 
 A catch statement MUST have two and ONLY two parameters and both of them must of

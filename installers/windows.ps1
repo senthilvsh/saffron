@@ -17,7 +17,7 @@ if (-not (Test-Path $installDir)) {
 }
 
 # URLs for downloads
-$saffronUrl = "https://github.com/senthilvsh/saffron/releases/download/v0.1/saffron.zip"
+$saffronUrl = "https://github.com/senthilvsh/saffron/releases/latest/download/saffron.zip"
 $jreUrl = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.8%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.8_7.zip"
 
 # Function to check if bundled JRE exists and works
