@@ -36,7 +36,7 @@ public class Main {
         String version = properties.getProperty("saffron.version");
 
         if (args[0].trim().equals("--version") || args[0].trim().equals("--help")) {
-            System.out.println("Saffron" + (version != null ? "v" + version : ""));
+            System.out.println("Saffron" + (version != null ? " v" + version : ""));
             System.out.println();
             System.out.println("Saffron is a simple, type-safe, general-purpose programming language.");
             return;
