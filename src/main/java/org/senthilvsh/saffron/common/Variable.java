@@ -6,13 +6,13 @@ public class Variable {
     private final String name;
     private final Type type;
     private BaseObj value;
-    private final boolean currentScope;
+    private final int scopeDepth;
 
-    public Variable(String name, Type type, BaseObj value, boolean currentScope) {
+    public Variable(String name, Type type, BaseObj value, int scopeDepth) {
         this.name = name;
         this.type = type;
         this.value = value;
-        this.currentScope = currentScope;
+        this.scopeDepth = scopeDepth;
     }
 
     public String getName() {
@@ -31,7 +31,7 @@ public class Variable {
         this.value = value;
     }
 
-    public boolean isCurrentScope() {
-        return currentScope;
+    public int getScopeDepth() {
+        return scopeDepth;
     }
 }
