@@ -35,7 +35,7 @@ if [ ! -d "$install_dir" ]; then
 fi
 
 # URLs for downloads
-saffron_url="https://github.com/senthilvsh/saffron/releases/download/v0.1/saffron.zip"
+saffron_url="https://github.com/senthilvsh/saffron/releases/latest/download/saffron.zip"
 
 # Set JRE download URL based on OS and architecture
 jre_url=""
