@@ -17,7 +17,7 @@ public class Interpreter {
 
     public Interpreter() {
         functions.putAll(NativeFunctionsRegistry.getAll());
-        stack.push(new Frame());
+        stack.newFrame();
     }
 
     public void execute(Program program) throws RuntimeError {
@@ -108,7 +108,7 @@ public class Interpreter {
                         typeArgName,
                         Type.STRING,
                         new StringObj(typeArgValue),
-                        true
+                        stack.getDepth()
                 );
 
                 String msgArgName = tcs.getExceptionMessage().getName();
@@ -117,7 +117,7 @@ public class Interpreter {
                         msgArgName,
                         Type.STRING,
                         new StringObj(msgArgValue),
-                        true
+                        stack.getDepth()
                 );
 
                 stack.peek().put(typeArgName, typeArgVariable);
@@ -141,17 +141,17 @@ public class Interpreter {
                         condition.getPosition(), condition.getLength());
             }
             BooleanObj conditionResult = (BooleanObj) baseObj;
-            stack.newBlockScope();
             validationStack.push(wl);
             while (conditionResult.getValue()) {
+                stack.newBlockScope();
                 StatementResult result = execute(wl.getBody());
+                stack.pop();
                 if (result.getType() == StatementResultType.BREAK) {
                     break;
                 }
                 conditionResult = (BooleanObj) evaluate(condition);
             }
             validationStack.pop();
-            stack.pop();
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof BreakStatement bs) {
             if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
@@ -175,7 +175,7 @@ public class Interpreter {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
             Frame frame = stack.peek();
-            if (frame.containsKey(name) && frame.get(name).isCurrentScope()) {
+            if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
@@ -195,7 +195,7 @@ public class Interpreter {
                     );
                 }
             }
-            Variable v = new Variable(name, Type.of(vds.getType()), initValue, true);
+            Variable v = new Variable(name, Type.of(vds.getType()), initValue, stack.getDepth());
             frame.put(name, v);
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof FunctionDefinition fd) {
@@ -262,7 +262,7 @@ public class Interpreter {
             Frame frame = stack.peek();
             var arguments = fd.getArguments();
             for (int i = 0; i < arguments.size(); i++) {
-                frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), true));
+                frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), stack.getDepth()));
             }
 
             validationStack.push(fd);

@@ -21,7 +21,7 @@ public class Validator {
 
     public Validator() {
         functions.putAll(NativeFunctionsRegistry.getAll());
-        stack.push(new Frame());
+        stack.newFrame();
     }
 
     public void validate(Program program) throws ValidationError {
@@ -120,7 +120,7 @@ public class Validator {
                     typeArgName,
                     Type.STRING,
                     null,
-                    true
+                    stack.getDepth()
             );
 
             String msgArgName = tcs.getExceptionMessage().getName();
@@ -128,7 +128,7 @@ public class Validator {
                     msgArgName,
                     Type.STRING,
                     null,
-                    true
+                    stack.getDepth()
             );
 
             stack.peek().put(typeArgName, typeArgVariable);
@@ -143,7 +143,7 @@ public class Validator {
                         vds.getPosition(), vds.getLength());
             }
             Frame frame = stack.peek();
-            if (frame.containsKey(name) && frame.get(name).isCurrentScope()) {
+            if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
                 throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
             }
 
@@ -158,7 +158,7 @@ public class Validator {
                 }
             }
 
-            frame.put(name, new Variable(name, Type.of(vds.getType()), null, true));
+            frame.put(name, new Variable(name, Type.of(vds.getType()), null, stack.getDepth()));
         } else if (statement instanceof FunctionDefinition fd) {
             // Create a new frame
             stack.newFrame();
@@ -167,7 +167,7 @@ public class Validator {
             Frame frame = stack.peek();
             var arguments = fd.getArguments();
             for (var a : arguments) {
-                frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, true));
+                frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, stack.getDepth()));
             }
 
             // Add function definition to global list
