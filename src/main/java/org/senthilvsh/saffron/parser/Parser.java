@@ -296,7 +296,6 @@ public class Parser {
         int position = left.getPosition();
         int length = (right.getPosition() + right.getLength()) - left.getPosition();
 
-        // TODO: Provide a dedicated class for assignment expression
         return new BinaryExpression(left, operator.getValue(), right, position, length, operator.getPosition(), operator.getLength());
     }
 

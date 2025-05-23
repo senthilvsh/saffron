@@ -15,10 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-// TODO: Compare types using the .equals() method
-// TODO: Array data-type
-// TODO: for-loop with range operator
-// TODO: File I/O
 public class Main {
     public static void main(String[] args) {
         if (args.length < 1 || args[0].trim().isEmpty()) {

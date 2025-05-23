@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+<title>Saffron Programming Language - Logo</title>
+</head>
+
+<body>
+
+<canvas id="logo" width="512" height="512"></canvas>
+
+<script>
+	window.addEventListener('load', () => {
+		const canvas = document.getElementById("logo");
+		const ctx = canvas.getContext("2d");
+		const r = 48;
+		ctx.fillStyle = "rgb(250, 100, 50)";
+		ctx.beginPath();
+		ctx.roundRect(32 , 32 , 128, 128, [r, r, 0, r]);
+		ctx.roundRect(192, 32 , 128, 128, [r, r, 0, 0]);
+		ctx.roundRect(352, 32 , 128, 128, [r, r, r, 0]);
+		ctx.roundRect(32 , 192, 128, 128, [r, 0, 0, r]);
+		ctx.roundRect(192, 192, 128, 128, [0, 0, 0, 0]);
+		ctx.roundRect(352, 192, 128, 128, [0, r, r, 0]);
+		ctx.roundRect(32 , 352, 128, 128, [r, 0, r, r]);
+		ctx.roundRect(192, 352, 128, 128, [0, 0, r, r]);
+		ctx.roundRect(352, 352, 128, 128, [0, r, r, r]);
+		ctx.fill();
+	});
+</script>
+
+</body>
+
+</html>
