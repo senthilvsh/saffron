@@ -34,170 +34,206 @@ public class Validator {
         if (statement instanceof ExpressionStatement es) {
             getType(es.getExpression());
         } else if (statement instanceof BlockStatement bs) {
-            List<Statement> statements = bs.getStatements();
-            for (Statement s : statements) {
-                validate(s);
-            }
+            validateBlockStatement(bs);
         } else if (statement instanceof ReturnStatement rs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
-                throw new ValidationError(
-                        "A 'return' statement can only be present inside a function",
-                        rs.getPosition(),
-                        rs.getLength()
-                );
-            }
-            Expression expression = rs.getExpression();
-            Type type = VOID;
-            if (expression != null) {
-                type = getType(expression);
-            }
-
-            Type returnType = containingFunction.getReturnType();
-            if (type != returnType) {
-                throw new ValidationError(
-                        String.format("Must return a value of type '%s'", returnType.getName()),
-                        rs.getPosition(),
-                        rs.getLength());
-            }
+            validateReturnStatement(rs);
         } else if (statement instanceof ConditionalStatement cs) {
-            Expression condition = cs.getCondition();
-            Type conditionType = getType(condition);
-            if (conditionType != Type.BOOLEAN) {
-                throw new ValidationError("The condition of an 'if' statement must be a boolean expression",
-                        condition.getPosition(), condition.getLength());
-            }
-            stack.newBlockScope();
-            validate(cs.getTrueClause());
-            stack.pop();
-            if (cs.getFalseClause() != null) {
-                stack.newBlockScope();
-                validate(cs.getFalseClause());
-                stack.pop();
-            }
+            validateConditionalStatement(cs);
         } else if (statement instanceof WhileLoop wl) {
-            Expression condition = wl.getCondition();
-            Type conditionType = getType(condition);
-            if (conditionType != Type.BOOLEAN) {
-                throw new ValidationError("The condition of a 'while' loop must be a boolean expression",
-                        condition.getPosition(), condition.getLength());
-            }
-            stack.newBlockScope();
-            validationStack.push(wl);
-            validate(wl.getBody());
-            validationStack.pop();
-            stack.pop();
+            validateWhileLoop(wl);
         } else if (statement instanceof ContinueStatement cs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
-                throw new ValidationError(
-                        "A 'continue' statement can be present only inside a loop",
-                        cs.getPosition(),
-                        cs.getLength()
-                );
-            }
+            validateContinueStatement(cs);
         } else if (statement instanceof BreakStatement bs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
-                throw new ValidationError(
-                        "A 'break' statement can be present only inside a loop",
-                        bs.getPosition(),
-                        bs.getLength()
-                );
-            }
+            validateBreakStatement(bs);
         } else if (statement instanceof TryCatchStatement tcs) {
-            stack.newBlockScope();
-            validate(tcs.getTryBlock());
-            stack.pop();
-            CatchBlockArgument exType = tcs.getExceptionType();
-            if (exType.getType() != STRING) {
-                throw new ValidationError("The type of the first argument must be string", exType.getPosition(), exType.getLength());
-            }
-            CatchBlockArgument exMsg = tcs.getExceptionMessage();
-            if (exMsg.getType() != STRING) {
-                throw new ValidationError("The type of the second argument must be string", exMsg.getPosition(), exMsg.getLength());
-            }
-            stack.newBlockScope();
-            String typeArgName = tcs.getExceptionType().getName();
-            Variable typeArgVariable = new Variable(
-                    typeArgName,
-                    Type.STRING,
-                    null,
-                    stack.getDepth()
-            );
-
-            String msgArgName = tcs.getExceptionMessage().getName();
-            Variable msgArgVariable = new Variable(
-                    msgArgName,
-                    Type.STRING,
-                    null,
-                    stack.getDepth()
-            );
-
-            stack.peek().put(typeArgName, typeArgVariable);
-            stack.peek().put(msgArgName, msgArgVariable);
-            validate(tcs.getCatchBlock());
-            stack.pop();
+            validateTryCatchStatement(tcs);
         } else if (statement instanceof VariableDeclaration vds) {
-            String name = vds.getName();
-            Type variableType = Type.of(vds.getType());
-            if (variableType == VOID) {
-                throw new ValidationError(String.format("Variables cannot have '%s' type", VOID.getName()),
-                        vds.getPosition(), vds.getLength());
-            }
-            Frame frame = stack.peek();
-            if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
-                throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
-            }
-
-            if (vds.getExpression() != null) {
-                Type expType = getType(vds.getExpression());
-                if (expType != variableType) {
-                    throw new ValidationError(
-                            String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
-                                    expType.getName(), variableType.getName()),
-                            vds.getExpression().getPosition(), vds.getExpression().getLength()
-                    );
-                }
-            }
-
-            frame.put(name, new Variable(name, Type.of(vds.getType()), null, stack.getDepth()));
+            validateVariableDeclaration(vds);
         } else if (statement instanceof FunctionDefinition fd) {
-            // Create a new frame
-            stack.newFrame();
+            validateFunctionDefinition(fd);
+        }
+    }
 
-            // Set arguments in the new frame
-            Frame frame = stack.peek();
-            var arguments = fd.getArguments();
-            for (var a : arguments) {
-                frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, stack.getDepth()));
-            }
+    private void validateBlockStatement(BlockStatement bs) throws ValidationError {
+        List<Statement> statements = bs.getStatements();
+        for (Statement s : statements) {
+            validate(s);
+        }
+    }
 
-            // Add function definition to global list
-            String signature = fd.getSignature();
-            if (functions.containsKey(signature)) {
-                throw new ValidationError(
-                        String.format("Function re-declaration: %s(%s)",
-                                fd.getName(),
-                                fd.getArguments()
-                                        .stream()
-                                        .map(a -> a.getType().getName().toLowerCase())
-                                        .collect(Collectors.joining(","))),
-                        fd.getNamePosition(),
-                        fd.getNameLength());
-            }
-            functions.put(signature, fd);
+    private void validateReturnStatement(ReturnStatement rs) throws ValidationError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
+            throw new ValidationError(
+                    "A 'return' statement can only be present inside a function",
+                    rs.getPosition(),
+                    rs.getLength()
+            );
+        }
+        Expression expression = rs.getExpression();
+        Type type = VOID;
+        if (expression != null) {
+            type = getType(expression);
+        }
 
-            validationStack.push(fd);
+        Type returnType = containingFunction.getReturnType();
+        if (type != returnType) {
+            throw new ValidationError(
+                    String.format("Must return a value of type '%s'", returnType.getName()),
+                    rs.getPosition(),
+                    rs.getLength());
+        }
+    }
 
-            // Validate body (including return statements)
-            validate(fd.getBody());
-
-            validationStack.pop();
-
-            // Pop frame
+    private void validateConditionalStatement(ConditionalStatement cs) throws ValidationError {
+        Expression condition = cs.getCondition();
+        Type conditionType = getType(condition);
+        if (conditionType != Type.BOOLEAN) {
+            throw new ValidationError("The condition of an 'if' statement must be a boolean expression",
+                    condition.getPosition(), condition.getLength());
+        }
+        stack.newBlockScope();
+        validate(cs.getTrueClause());
+        stack.pop();
+        if (cs.getFalseClause() != null) {
+            stack.newBlockScope();
+            validate(cs.getFalseClause());
             stack.pop();
         }
     }
 
-    public Type getType(Expression expression) throws ValidationError {
+    private void validateWhileLoop(WhileLoop wl) throws ValidationError {
+        Expression condition = wl.getCondition();
+        Type conditionType = getType(condition);
+        if (conditionType != Type.BOOLEAN) {
+            throw new ValidationError("The condition of a 'while' loop must be a boolean expression",
+                    condition.getPosition(), condition.getLength());
+        }
+        stack.newBlockScope();
+        validationStack.push(wl);
+        validate(wl.getBody());
+        validationStack.pop();
+        stack.pop();
+    }
+
+    private void validateContinueStatement(ContinueStatement cs) throws ValidationError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+            throw new ValidationError(
+                    "A 'continue' statement can be present only inside a loop",
+                    cs.getPosition(),
+                    cs.getLength()
+            );
+        }
+    }
+
+    private void validateBreakStatement(BreakStatement bs) throws ValidationError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+            throw new ValidationError(
+                    "A 'break' statement can be present only inside a loop",
+                    bs.getPosition(),
+                    bs.getLength()
+            );
+        }
+    }
+
+    private void validateTryCatchStatement(TryCatchStatement tcs) throws ValidationError {
+        stack.newBlockScope();
+        validate(tcs.getTryBlock());
+        stack.pop();
+        CatchBlockArgument exType = tcs.getExceptionType();
+        if (exType.getType() != STRING) {
+            throw new ValidationError("The type of the first argument must be string", exType.getPosition(), exType.getLength());
+        }
+        CatchBlockArgument exMsg = tcs.getExceptionMessage();
+        if (exMsg.getType() != STRING) {
+            throw new ValidationError("The type of the second argument must be string", exMsg.getPosition(), exMsg.getLength());
+        }
+        stack.newBlockScope();
+        String typeArgName = tcs.getExceptionType().getName();
+        Variable typeArgVariable = new Variable(
+                typeArgName,
+                Type.STRING,
+                null,
+                stack.getDepth()
+        );
+
+        String msgArgName = tcs.getExceptionMessage().getName();
+        Variable msgArgVariable = new Variable(
+                msgArgName,
+                Type.STRING,
+                null,
+                stack.getDepth()
+        );
+
+        stack.peek().put(typeArgName, typeArgVariable);
+        stack.peek().put(msgArgName, msgArgVariable);
+        validate(tcs.getCatchBlock());
+        stack.pop();
+    }
+
+    private void validateVariableDeclaration(VariableDeclaration vds) throws ValidationError {
+        String name = vds.getName();
+        Type variableType = Type.of(vds.getType());
+        if (variableType == VOID) {
+            throw new ValidationError(String.format("Variables cannot have '%s' type", VOID.getName()),
+                    vds.getPosition(), vds.getLength());
+        }
+        Frame frame = stack.peek();
+        if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
+            throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
+        }
+
+        if (vds.getExpression() != null) {
+            Type expType = getType(vds.getExpression());
+            if (expType != variableType) {
+                throw new ValidationError(
+                        String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
+                                expType.getName(), variableType.getName()),
+                        vds.getExpression().getPosition(), vds.getExpression().getLength()
+                );
+            }
+        }
+
+        frame.put(name, new Variable(name, Type.of(vds.getType()), null, stack.getDepth()));
+    }
+
+    private void validateFunctionDefinition(FunctionDefinition fd) throws ValidationError {
+        // Create a new frame
+        stack.newFrame();
+
+        // Set arguments in the new frame
+        Frame frame = stack.peek();
+        var arguments = fd.getArguments();
+        for (var a : arguments) {
+            frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, stack.getDepth()));
+        }
+
+        // Add function definition to global list
+        String signature = fd.getSignature();
+        if (functions.containsKey(signature)) {
+            throw new ValidationError(
+                    String.format("Function re-declaration: %s(%s)",
+                            fd.getName(),
+                            fd.getArguments()
+                                    .stream()
+                                    .map(a -> a.getType().getName().toLowerCase())
+                                    .collect(Collectors.joining(","))),
+                    fd.getNamePosition(),
+                    fd.getNameLength());
+        }
+        functions.put(signature, fd);
+
+        validationStack.push(fd);
+
+        // Validate body (including return statements)
+        validate(fd.getBody());
+
+        validationStack.pop();
+
+        // Pop frame
+        stack.pop();
+    }
+
+    private Type getType(Expression expression) throws ValidationError {
         if (expression instanceof NumberLiteral) {
             return Type.NUMBER;
         }
