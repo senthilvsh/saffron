@@ -28,197 +28,238 @@ public class Interpreter {
 
     private StatementResult execute(Statement statement) throws RuntimeError {
         if (statement instanceof ExpressionStatement es) {
-            evaluate(es.getExpression());
-            return new StatementResult(StatementResultType.NORMAL);
+            return executeExpressionStatement(es);
         } else if (statement instanceof BlockStatement bs) {
-            List<Statement> statements = bs.getStatements();
-            StatementResult result = new StatementResult(StatementResultType.NORMAL);
-            for (Statement s : statements) {
-                result = execute(s);
-                if (result.getType() != StatementResultType.NORMAL) {
-                    break;
-                }
-            }
-            return result;
+            return executeBlockStatement(bs);
         } else if (statement instanceof ReturnStatement rs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
-                throw new RuntimeError(
-                        "A 'return' statement can only be present inside a function",
-                        rs.getPosition(),
-                        rs.getLength()
-                );
-            }
-            Expression expression = rs.getExpression();
-            BaseObj returnValue = null;
-            if (expression != null) {
-                returnValue = evaluate(expression);
-            }
-
-            if (returnValue != null && returnValue.getType() != containingFunction.getReturnType()) {
-                throw new RuntimeError(
-                        "The type of the return value does not match the function's return type",
-                        rs.getPosition(),
-                        rs.getLength()
-                );
-            }
-
-            return new ReturnStatementResult(returnValue);
+            return executeReturnStatement(rs);
         } else if (statement instanceof ConditionalStatement cs) {
-            Expression condition = cs.getCondition();
-            BaseObj baseObj = evaluate(condition);
-            if (baseObj.getType() != Type.BOOLEAN) {
-                throw new RuntimeError("The condition of an 'if' statement must be a boolean expression",
-                        condition.getPosition(), condition.getLength());
-            }
-            BooleanObj conditionResult = (BooleanObj) baseObj;
-            if (conditionResult.getValue()) {
-                StatementResult result;
-                scopes.addBlockScope();
-                result = execute(cs.getTrueClause());
-                scopes.remove();
-                return result;
-            } else {
-                if (cs.getFalseClause() != null) {
-                    StatementResult result;
-                    scopes.addBlockScope();
-                    result = execute(cs.getFalseClause());
-                    scopes.remove();
-                    return result;
-                }
-            }
+            return executeConditionalStatement(cs);
         } else if (statement instanceof TryCatchStatement tcs) {
-            StatementResult result;
-            Statement tryBlock = tcs.getTryBlock();
-
-            try {
-                scopes.addBlockScope();
-                result = execute(tryBlock);
-                scopes.remove();
-                return result;
-            } catch (NativeFunctionException ex) {
-                scopes.remove();
-
-                Statement catchBlock = tcs.getCatchBlock();
-
-                scopes.addBlockScope();
-
-                String typeArgName = tcs.getExceptionType().getName();
-                String typeArgValue = ex.getType();
-                Variable typeArgVariable = new Variable(
-                        typeArgName,
-                        Type.STRING,
-                        new StringObj(typeArgValue),
-                        scopes.getDepth()
-                );
-
-                String msgArgName = tcs.getExceptionMessage().getName();
-                String msgArgValue = ex.getMessage();
-                Variable msgArgVariable = new Variable(
-                        msgArgName,
-                        Type.STRING,
-                        new StringObj(msgArgValue),
-                        scopes.getDepth()
-                );
-
-                scopes.current().put(typeArgName, typeArgVariable);
-                scopes.current().put(msgArgName, msgArgVariable);
-
-                try {
-                    execute(catchBlock);
-                    return new StatementResult(StatementResultType.NORMAL);
-                } catch (NativeFunctionException catchBlockException) {
-                    scopes.remove();
-                    // This is the case where code inside the catch block throws an exception,
-                    // and it is not handled with a nested try-catch. All we can do it throw it upstream.
-                    throw catchBlockException;
-                }
-            }
+            return executeTryCatchStatement(tcs);
         } else if (statement instanceof WhileLoop wl) {
-            Expression condition = wl.getCondition();
-            BaseObj baseObj = evaluate(condition);
-            if (baseObj.getType() != Type.BOOLEAN) {
-                throw new RuntimeError("The condition of a 'while' loop must be a boolean expression",
-                        condition.getPosition(), condition.getLength());
-            }
-            BooleanObj conditionResult = (BooleanObj) baseObj;
-            validationStack.push(wl);
-            while (conditionResult.getValue()) {
-                scopes.addBlockScope();
-                StatementResult result = execute(wl.getBody());
-                scopes.remove();
-                if (result.getType() == StatementResultType.BREAK) {
-                    break;
-                }
-                conditionResult = (BooleanObj) evaluate(condition);
-            }
-            validationStack.pop();
-            return new StatementResult(StatementResultType.NORMAL);
+            return executeWhileLoop(wl);
         } else if (statement instanceof BreakStatement bs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
-                throw new RuntimeError(
-                        "A 'break' statement can be present only inside a loop",
-                        bs.getPosition(),
-                        bs.getLength()
-                );
-            }
-            return new StatementResult(StatementResultType.BREAK);
+            return executeBreakStatement(bs);
         } else if (statement instanceof ContinueStatement cs) {
-            if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
-                throw new RuntimeError(
-                        "A 'continue' statement can be present only inside a loop",
-                        cs.getPosition(),
-                        cs.getLength()
-                );
-            }
-            return new StatementResult(StatementResultType.CONTINUE);
-        } else if (statement instanceof VariableDeclaration vds) {
-            String name = vds.getName();
-            Type variableType = Type.of(vds.getType());
-            Scope scope = scopes.current();
-            if (scope.containsKey(name) && scope.get(name).getScopeDepth() == scopes.getDepth()) {
-                throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
-                        vds.getPosition(), vds.getLength());
-            }
-            if (variableType == Type.VOID) {
-                throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
-                        vds.getPosition(), vds.getLength());
-            }
-            BaseObj initValue = null;
-            if (vds.getExpression() != null) {
-                initValue = evaluate(vds.getExpression());
-                if (initValue.getType() != variableType) {
-                    throw new RuntimeError(
-                            String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
-                                    initValue.getType().getName(), variableType.getName()),
-                            vds.getExpression().getPosition(),
-                            vds.getExpression().getLength()
-                    );
-                }
-            }
-            Variable v = new Variable(name, Type.of(vds.getType()), initValue, scopes.getDepth());
-            scope.put(name, v);
-            return new StatementResult(StatementResultType.NORMAL);
+            return executeContinueStatement(cs);
+        } else if (statement instanceof VariableDeclaration vd) {
+            return executeVariableDeclaration(vd);
         } else if (statement instanceof FunctionDefinition fd) {
-            String signature = fd.getSignature();
-            if (functions.containsKey(signature)) {
-                throw new RuntimeError(
-                        String.format("Function re-declaration: %s(%s)",
-                                fd.getName(),
-                                fd.getArguments()
-                                        .stream()
-                                        .map(a -> a.getType().getName().toLowerCase())
-                                        .collect(Collectors.joining(","))),
-                        fd.getNamePosition(),
-                        fd.getNameLength());
-            }
-            functions.put(signature, fd);
-            return new StatementResult(StatementResultType.NORMAL);
+            return executeFunctionDefinition(fd);
         }
 
         return new StatementResult(StatementResultType.NORMAL);
     }
 
-    public BaseObj evaluate(Expression expression) throws RuntimeError {
+    private StatementResult executeExpressionStatement(ExpressionStatement es) throws RuntimeError {
+        evaluate(es.getExpression());
+        return new StatementResult(StatementResultType.NORMAL);
+    }
+
+    private StatementResult executeBlockStatement(BlockStatement bs) throws RuntimeError {
+        List<Statement> statements = bs.getStatements();
+        StatementResult result = new StatementResult(StatementResultType.NORMAL);
+        for (Statement s : statements) {
+            result = execute(s);
+            if (result.getType() != StatementResultType.NORMAL) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private StatementResult executeReturnStatement(ReturnStatement rs) throws RuntimeError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof FunctionDefinition containingFunction)) {
+            throw new RuntimeError(
+                    "A 'return' statement can only be present inside a function",
+                    rs.getPosition(),
+                    rs.getLength()
+            );
+        }
+        Expression expression = rs.getExpression();
+        BaseObj returnValue = null;
+        if (expression != null) {
+            returnValue = evaluate(expression);
+        }
+
+        if (returnValue != null && returnValue.getType() != containingFunction.getReturnType()) {
+            throw new RuntimeError(
+                    "The type of the return value does not match the function's return type",
+                    rs.getPosition(),
+                    rs.getLength()
+            );
+        }
+
+        return new ReturnStatementResult(returnValue);
+    }
+
+    private StatementResult executeConditionalStatement(ConditionalStatement cs) throws RuntimeError {
+        Expression condition = cs.getCondition();
+        BaseObj baseObj = evaluate(condition);
+        if (baseObj.getType() != Type.BOOLEAN) {
+            throw new RuntimeError("The condition of an 'if' statement must be a boolean expression",
+                    condition.getPosition(), condition.getLength());
+        }
+        BooleanObj conditionResult = (BooleanObj) baseObj;
+        if (conditionResult.getValue()) {
+            StatementResult result;
+            scopes.addBlockScope();
+            result = execute(cs.getTrueClause());
+            scopes.remove();
+            return result;
+        } else {
+            if (cs.getFalseClause() != null) {
+                StatementResult result;
+                scopes.addBlockScope();
+                result = execute(cs.getFalseClause());
+                scopes.remove();
+                return result;
+            }
+        }
+        return new StatementResult(StatementResultType.NORMAL);
+    }
+
+    private StatementResult executeTryCatchStatement(TryCatchStatement tcs) throws RuntimeError {
+        StatementResult result;
+        Statement tryBlock = tcs.getTryBlock();
+
+        try {
+            scopes.addBlockScope();
+            result = execute(tryBlock);
+            scopes.remove();
+            return result;
+        } catch (NativeFunctionException ex) {
+            scopes.remove();
+
+            Statement catchBlock = tcs.getCatchBlock();
+
+            scopes.addBlockScope();
+
+            String typeArgName = tcs.getExceptionType().getName();
+            String typeArgValue = ex.getType();
+            Variable typeArgVariable = new Variable(
+                    typeArgName,
+                    Type.STRING,
+                    new StringObj(typeArgValue),
+                    scopes.getDepth()
+            );
+
+            String msgArgName = tcs.getExceptionMessage().getName();
+            String msgArgValue = ex.getMessage();
+            Variable msgArgVariable = new Variable(
+                    msgArgName,
+                    Type.STRING,
+                    new StringObj(msgArgValue),
+                    scopes.getDepth()
+            );
+
+            scopes.current().put(typeArgName, typeArgVariable);
+            scopes.current().put(msgArgName, msgArgVariable);
+
+            try {
+                execute(catchBlock);
+                return new StatementResult(StatementResultType.NORMAL);
+            } catch (NativeFunctionException catchBlockException) {
+                scopes.remove();
+                // This is the case where code inside the catch block throws an exception,
+                // and it is not handled with a nested try-catch. All we can do it throw it upstream.
+                throw catchBlockException;
+            }
+        }
+    }
+
+    private StatementResult executeWhileLoop(WhileLoop wl) throws RuntimeError {
+        Expression condition = wl.getCondition();
+        BaseObj baseObj = evaluate(condition);
+        if (baseObj.getType() != Type.BOOLEAN) {
+            throw new RuntimeError("The condition of a 'while' loop must be a boolean expression",
+                    condition.getPosition(), condition.getLength());
+        }
+        BooleanObj conditionResult = (BooleanObj) baseObj;
+        validationStack.push(wl);
+        while (conditionResult.getValue()) {
+            scopes.addBlockScope();
+            StatementResult result = execute(wl.getBody());
+            scopes.remove();
+            if (result.getType() == StatementResultType.BREAK) {
+                break;
+            }
+            conditionResult = (BooleanObj) evaluate(condition);
+        }
+        validationStack.pop();
+        return new StatementResult(StatementResultType.NORMAL);
+    }
+
+    private StatementResult executeBreakStatement(BreakStatement bs) throws RuntimeError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+            throw new RuntimeError(
+                    "A 'break' statement can be present only inside a loop",
+                    bs.getPosition(),
+                    bs.getLength()
+            );
+        }
+        return new StatementResult(StatementResultType.BREAK);
+    }
+
+    private StatementResult executeContinueStatement(ContinueStatement cs) throws RuntimeError {
+        if (validationStack.isEmpty() || !(validationStack.peek() instanceof WhileLoop)) {
+            throw new RuntimeError(
+                    "A 'continue' statement can be present only inside a loop",
+                    cs.getPosition(),
+                    cs.getLength()
+            );
+        }
+        return new StatementResult(StatementResultType.CONTINUE);
+    }
+
+    private StatementResult executeVariableDeclaration(VariableDeclaration vd) throws RuntimeError {
+        String name = vd.getName();
+        Type variableType = Type.of(vd.getType());
+        Scope scope = scopes.current();
+        if (scope.containsKey(name) && scope.get(name).getScopeDepth() == scopes.getDepth()) {
+            throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
+                    vd.getPosition(), vd.getLength());
+        }
+        if (variableType == Type.VOID) {
+            throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
+                    vd.getPosition(), vd.getLength());
+        }
+        BaseObj initValue = null;
+        if (vd.getExpression() != null) {
+            initValue = evaluate(vd.getExpression());
+            if (initValue.getType() != variableType) {
+                throw new RuntimeError(
+                        String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
+                                initValue.getType().getName(), variableType.getName()),
+                        vd.getExpression().getPosition(),
+                        vd.getExpression().getLength()
+                );
+            }
+        }
+        Variable v = new Variable(name, Type.of(vd.getType()), initValue, scopes.getDepth());
+        scope.put(name, v);
+        return new StatementResult(StatementResultType.NORMAL);
+    }
+
+    private StatementResult executeFunctionDefinition(FunctionDefinition fd) throws RuntimeError {
+        String signature = fd.getSignature();
+        if (functions.containsKey(signature)) {
+            throw new RuntimeError(
+                    String.format("Function re-declaration: %s(%s)",
+                            fd.getName(),
+                            fd.getArguments()
+                                    .stream()
+                                    .map(a -> a.getType().getName().toLowerCase())
+                                    .collect(Collectors.joining(","))),
+                    fd.getNamePosition(),
+                    fd.getNameLength());
+        }
+        functions.put(signature, fd);
+        return new StatementResult(StatementResultType.NORMAL);
+    }
+
+    private BaseObj evaluate(Expression expression) throws RuntimeError {
         if (expression instanceof NumberLiteral n) {
             return new NumberObj(n.getValue());
         }
@@ -384,7 +425,7 @@ public class Interpreter {
         throw new RuntimeError("Unknown expression type", expression.getPosition(), expression.getLength());
     }
 
-    BaseObj add(BaseObj left, BaseObj right) {
+    private BaseObj add(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() + ((NumberObj) right).getValue());
         }
@@ -396,63 +437,63 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj subtract(BaseObj left, BaseObj right) {
+    private BaseObj subtract(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() - ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj multiply(BaseObj left, BaseObj right) {
+    private BaseObj multiply(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() * ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj divide(BaseObj left, BaseObj right) {
+    private BaseObj divide(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() / ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj modulo(BaseObj left, BaseObj right) {
+    private BaseObj modulo(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new NumberObj(((NumberObj) left).getValue() % ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj greaterThan(BaseObj left, BaseObj right) {
+    private BaseObj greaterThan(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new BooleanObj(((NumberObj) left).getValue() > ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj greaterThanOrEqual(BaseObj left, BaseObj right) {
+    private BaseObj greaterThanOrEqual(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new BooleanObj(((NumberObj) left).getValue() >= ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj lessThan(BaseObj left, BaseObj right) {
+    private BaseObj lessThan(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new BooleanObj(((NumberObj) left).getValue() < ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj lessThanOrEqual(BaseObj left, BaseObj right) {
+    private BaseObj lessThanOrEqual(BaseObj left, BaseObj right) {
         if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
             return new BooleanObj(((NumberObj) left).getValue() <= ((NumberObj) right).getValue());
         }
         throw new RuntimeException();
     }
 
-    BaseObj equal(BaseObj left, BaseObj right) {
+    private BaseObj equal(BaseObj left, BaseObj right) {
         if (left.getType() == right.getType()) {
             if (left.getType() == Type.NUMBER) {
                 return new BooleanObj(((NumberObj) left).getValue() == ((NumberObj) right).getValue());
@@ -469,7 +510,7 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj notEqual(BaseObj left, BaseObj right) {
+    private BaseObj notEqual(BaseObj left, BaseObj right) {
         if (left.getType() == right.getType()) {
             if (left.getType() == Type.NUMBER) {
                 return new BooleanObj(((NumberObj) left).getValue() != ((NumberObj) right).getValue());
@@ -486,7 +527,7 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj logicalAnd(BaseObj left, BaseObj right) {
+    private BaseObj logicalAnd(BaseObj left, BaseObj right) {
         if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
             BooleanObj leftBoolean = (BooleanObj) left;
             BooleanObj rightBoolean = (BooleanObj) right;
@@ -495,7 +536,7 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj logicalOr(BaseObj left, BaseObj right) {
+    private BaseObj logicalOr(BaseObj left, BaseObj right) {
         if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
             BooleanObj leftBoolean = (BooleanObj) left;
             BooleanObj rightBoolean = (BooleanObj) right;
@@ -504,7 +545,7 @@ public class Interpreter {
         throw new RuntimeException();
     }
 
-    BaseObj assign(BinaryExpression binaryExpression) throws RuntimeError {
+    private BaseObj assign(BinaryExpression binaryExpression) throws RuntimeError {
         String variableName = getVariableName(binaryExpression);
 
         BaseObj right = evaluate(binaryExpression.getRight());
