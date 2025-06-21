@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.BooleanObj;
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
@@ -27,8 +27,8 @@ public class WriteBoolean implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
-        BooleanObj baseObj = (BooleanObj) frame.get("value").getValue();
+    public StatementResult run(Scope scope) {
+        BooleanObj baseObj = (BooleanObj) scope.get("value").getValue();
         System.out.print(baseObj.getValue());
         return new ReturnStatementResult(null);
     }

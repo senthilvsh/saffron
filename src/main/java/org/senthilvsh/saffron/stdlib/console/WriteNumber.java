@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.NumberObj;
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
@@ -27,8 +27,8 @@ public class WriteNumber implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
-        NumberObj numberObj = (NumberObj) frame.get("value").getValue();
+    public StatementResult run(Scope scope) {
+        NumberObj numberObj = (NumberObj) scope.get("value").getValue();
         double value = numberObj.getValue();
         String str;
         if (value == (long) value) {

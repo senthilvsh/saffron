@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.NativeFunctionException;
 import org.senthilvsh.saffron.runtime.StatementResult;
@@ -15,5 +15,5 @@ public interface NativeFunction {
 
     Type getReturnType();
 
-    StatementResult run(Frame frame) throws NativeFunctionException;
+    StatementResult run(Scope scope) throws NativeFunctionException;
 }

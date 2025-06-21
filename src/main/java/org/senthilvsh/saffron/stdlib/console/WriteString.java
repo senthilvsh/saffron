@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
 import org.senthilvsh.saffron.runtime.StatementResult;
@@ -27,8 +27,8 @@ public class WriteString implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
-        StringObj baseObj = (StringObj) frame.get("value").getValue();
+    public StatementResult run(Scope scope) {
+        StringObj baseObj = (StringObj) scope.get("value").getValue();
         System.out.print(baseObj.getValue());
         return new ReturnStatementResult(null);
     }

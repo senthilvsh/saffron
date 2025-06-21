@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.string;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.runtime.BooleanObj;
@@ -32,12 +32,12 @@ public class StringEndsWith implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
-        Variable sourceVar = frame.get("source");
+    public StatementResult run(Scope scope) {
+        Variable sourceVar = scope.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
 
-        Variable searchVar = frame.get("search");
+        Variable searchVar = scope.get("search");
         StringObj searchObj = (StringObj) searchVar.getValue();
         String search = searchObj.getValue();
 

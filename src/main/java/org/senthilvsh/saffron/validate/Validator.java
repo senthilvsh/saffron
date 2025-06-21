@@ -1,8 +1,8 @@
 package org.senthilvsh.saffron.validate;
 
 import org.senthilvsh.saffron.ast.*;
-import org.senthilvsh.saffron.common.Frame;
-import org.senthilvsh.saffron.common.FrameStack;
+import org.senthilvsh.saffron.common.Scope;
+import org.senthilvsh.saffron.common.Scopes;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
@@ -14,14 +14,14 @@ import static org.senthilvsh.saffron.common.Type.STRING;
 import static org.senthilvsh.saffron.common.Type.VOID;
 
 public class Validator {
-    private final FrameStack stack = new FrameStack();
+    private final Scopes scopes = new Scopes();
     private final Map<String, FunctionDefinition> functions = new HashMap<>();
 
     private final Stack<Statement> validationStack = new Stack<>();
 
     public Validator() {
         functions.putAll(NativeFunctionsRegistry.getAll());
-        stack.newFrame();
+        scopes.addFunctionScope();
     }
 
     public void validate(Program program) throws ValidationError {
@@ -91,13 +91,13 @@ public class Validator {
             throw new ValidationError("The condition of an 'if' statement must be a boolean expression",
                     condition.getPosition(), condition.getLength());
         }
-        stack.newBlockScope();
+        scopes.addBlockScope();
         validate(cs.getTrueClause());
-        stack.pop();
+        scopes.remove();
         if (cs.getFalseClause() != null) {
-            stack.newBlockScope();
+            scopes.addBlockScope();
             validate(cs.getFalseClause());
-            stack.pop();
+            scopes.remove();
         }
     }
 
@@ -108,11 +108,11 @@ public class Validator {
             throw new ValidationError("The condition of a 'while' loop must be a boolean expression",
                     condition.getPosition(), condition.getLength());
         }
-        stack.newBlockScope();
+        scopes.addBlockScope();
         validationStack.push(wl);
         validate(wl.getBody());
         validationStack.pop();
-        stack.pop();
+        scopes.remove();
     }
 
     private void validateContinueStatement(ContinueStatement cs) throws ValidationError {
@@ -136,9 +136,9 @@ public class Validator {
     }
 
     private void validateTryCatchStatement(TryCatchStatement tcs) throws ValidationError {
-        stack.newBlockScope();
+        scopes.addBlockScope();
         validate(tcs.getTryBlock());
-        stack.pop();
+        scopes.remove();
         CatchBlockArgument exType = tcs.getExceptionType();
         if (exType.getType() != STRING) {
             throw new ValidationError("The type of the first argument must be string", exType.getPosition(), exType.getLength());
@@ -147,13 +147,13 @@ public class Validator {
         if (exMsg.getType() != STRING) {
             throw new ValidationError("The type of the second argument must be string", exMsg.getPosition(), exMsg.getLength());
         }
-        stack.newBlockScope();
+        scopes.addBlockScope();
         String typeArgName = tcs.getExceptionType().getName();
         Variable typeArgVariable = new Variable(
                 typeArgName,
                 Type.STRING,
                 null,
-                stack.getDepth()
+                scopes.getDepth()
         );
 
         String msgArgName = tcs.getExceptionMessage().getName();
@@ -161,13 +161,13 @@ public class Validator {
                 msgArgName,
                 Type.STRING,
                 null,
-                stack.getDepth()
+                scopes.getDepth()
         );
 
-        stack.peek().put(typeArgName, typeArgVariable);
-        stack.peek().put(msgArgName, msgArgVariable);
+        scopes.current().put(typeArgName, typeArgVariable);
+        scopes.current().put(msgArgName, msgArgVariable);
         validate(tcs.getCatchBlock());
-        stack.pop();
+        scopes.remove();
     }
 
     private void validateVariableDeclaration(VariableDeclaration vds) throws ValidationError {
@@ -177,8 +177,8 @@ public class Validator {
             throw new ValidationError(String.format("Variables cannot have '%s' type", VOID.getName()),
                     vds.getPosition(), vds.getLength());
         }
-        Frame frame = stack.peek();
-        if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
+        Scope scope = scopes.current();
+        if (scope.containsKey(name) && scope.get(name).getScopeDepth() == scopes.getDepth()) {
             throw new ValidationError(String.format("Re-declaration of variable '%s'", name), vds.getPosition(), vds.getLength());
         }
 
@@ -193,18 +193,18 @@ public class Validator {
             }
         }
 
-        frame.put(name, new Variable(name, Type.of(vds.getType()), null, stack.getDepth()));
+        scope.put(name, new Variable(name, Type.of(vds.getType()), null, scopes.getDepth()));
     }
 
     private void validateFunctionDefinition(FunctionDefinition fd) throws ValidationError {
         // Create a new frame
-        stack.newFrame();
+        scopes.addFunctionScope();
 
         // Set arguments in the new frame
-        Frame frame = stack.peek();
+        Scope scope = scopes.current();
         var arguments = fd.getArguments();
         for (var a : arguments) {
-            frame.put(a.getName(), new Variable(a.getName(), a.getType(), null, stack.getDepth()));
+            scope.put(a.getName(), new Variable(a.getName(), a.getType(), null, scopes.getDepth()));
         }
 
         // Add function definition to global list
@@ -230,7 +230,7 @@ public class Validator {
         validationStack.pop();
 
         // Pop frame
-        stack.pop();
+        scopes.remove();
     }
 
     private Type getType(Expression expression) throws ValidationError {
@@ -244,12 +244,12 @@ public class Validator {
             return Type.BOOLEAN;
         }
         if (expression instanceof Identifier identifier) {
-            Frame frame = stack.peek();
-            if (!frame.containsKey(identifier.getName())) {
+            Scope scope = scopes.current();
+            if (!scope.containsKey(identifier.getName())) {
                 throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                         identifier.getPosition(), identifier.getLength());
             }
-            return frame.get(identifier.getName()).getType();
+            return scope.get(identifier.getName()).getType();
         }
         if (expression instanceof FunctionCallExpression call) {
             String name = call.getName();
@@ -462,12 +462,12 @@ public class Validator {
             throw new ValidationError("Left side of assignment must be a variable",
                     binaryExpression.getLeft().getPosition(), binaryExpression.getLeft().getLength());
         }
-        Frame frame = stack.peek();
-        if (!frame.containsKey(identifier.getName())) {
+        Scope scope = scopes.current();
+        if (!scope.containsKey(identifier.getName())) {
             throw new ValidationError(String.format("Undeclared variable '%s'", identifier.getName()),
                     identifier.getPosition(), identifier.getLength());
         }
-        Type variableType = frame.get(identifier.getName()).getType();
+        Type variableType = scope.get(identifier.getName()).getType();
         Type right = getType(binaryExpression.getRight());
         if (variableType == right) {
             return right;

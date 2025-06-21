@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.string;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.runtime.*;
@@ -29,12 +29,12 @@ public class StringSubStringToEnd implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) throws NativeFunctionException {
-        Variable sourceVar = frame.get("source");
+    public StatementResult run(Scope scope) throws NativeFunctionException {
+        Variable sourceVar = scope.get("source");
         StringObj sourceObj = (StringObj) sourceVar.getValue();
         String source = sourceObj.getValue();
 
-        Variable startVar = frame.get("start");
+        Variable startVar = scope.get("start");
         NumberObj startObj = (NumberObj) startVar.getValue();
         double start = startObj.getValue();
 
