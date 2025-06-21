@@ -1,8 +1,8 @@
 package org.senthilvsh.saffron.runtime;
 
 import org.senthilvsh.saffron.ast.*;
-import org.senthilvsh.saffron.common.Frame;
-import org.senthilvsh.saffron.common.FrameStack;
+import org.senthilvsh.saffron.common.Scope;
+import org.senthilvsh.saffron.common.Scopes;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 
 public class Interpreter {
     private final Stack<Statement> validationStack = new Stack<>();
-    private final FrameStack stack = new FrameStack();
+    private final Scopes scopes = new Scopes();
     private final Map<String, FunctionDefinition> functions = new HashMap<>();
 
     public Interpreter() {
         functions.putAll(NativeFunctionsRegistry.getAll());
-        stack.newFrame();
+        scopes.addFunctionScope();
     }
 
     public void execute(Program program) throws RuntimeError {
@@ -73,16 +73,16 @@ public class Interpreter {
             BooleanObj conditionResult = (BooleanObj) baseObj;
             if (conditionResult.getValue()) {
                 StatementResult result;
-                stack.newBlockScope();
+                scopes.addBlockScope();
                 result = execute(cs.getTrueClause());
-                stack.pop();
+                scopes.remove();
                 return result;
             } else {
                 if (cs.getFalseClause() != null) {
                     StatementResult result;
-                    stack.newBlockScope();
+                    scopes.addBlockScope();
                     result = execute(cs.getFalseClause());
-                    stack.pop();
+                    scopes.remove();
                     return result;
                 }
             }
@@ -91,16 +91,16 @@ public class Interpreter {
             Statement tryBlock = tcs.getTryBlock();
 
             try {
-                stack.newBlockScope();
+                scopes.addBlockScope();
                 result = execute(tryBlock);
-                stack.pop();
+                scopes.remove();
                 return result;
             } catch (NativeFunctionException ex) {
-                stack.pop();
+                scopes.remove();
 
                 Statement catchBlock = tcs.getCatchBlock();
 
-                stack.newBlockScope();
+                scopes.addBlockScope();
 
                 String typeArgName = tcs.getExceptionType().getName();
                 String typeArgValue = ex.getType();
@@ -108,7 +108,7 @@ public class Interpreter {
                         typeArgName,
                         Type.STRING,
                         new StringObj(typeArgValue),
-                        stack.getDepth()
+                        scopes.getDepth()
                 );
 
                 String msgArgName = tcs.getExceptionMessage().getName();
@@ -117,18 +117,18 @@ public class Interpreter {
                         msgArgName,
                         Type.STRING,
                         new StringObj(msgArgValue),
-                        stack.getDepth()
+                        scopes.getDepth()
                 );
 
-                stack.peek().put(typeArgName, typeArgVariable);
-                stack.peek().put(msgArgName, msgArgVariable);
+                scopes.current().put(typeArgName, typeArgVariable);
+                scopes.current().put(msgArgName, msgArgVariable);
 
                 try {
                     execute(catchBlock);
                     return new StatementResult(StatementResultType.NORMAL);
                 } catch (NativeFunctionException catchBlockException) {
-                    stack.pop();
-                    // This is the case where code inside the catch block throws an exception
+                    scopes.remove();
+                    // This is the case where code inside the catch block throws an exception,
                     // and it is not handled with a nested try-catch. All we can do it throw it upstream.
                     throw catchBlockException;
                 }
@@ -143,9 +143,9 @@ public class Interpreter {
             BooleanObj conditionResult = (BooleanObj) baseObj;
             validationStack.push(wl);
             while (conditionResult.getValue()) {
-                stack.newBlockScope();
+                scopes.addBlockScope();
                 StatementResult result = execute(wl.getBody());
-                stack.pop();
+                scopes.remove();
                 if (result.getType() == StatementResultType.BREAK) {
                     break;
                 }
@@ -174,8 +174,8 @@ public class Interpreter {
         } else if (statement instanceof VariableDeclaration vds) {
             String name = vds.getName();
             Type variableType = Type.of(vds.getType());
-            Frame frame = stack.peek();
-            if (frame.containsKey(name) && frame.get(name).getScopeDepth() == stack.getDepth()) {
+            Scope scope = scopes.current();
+            if (scope.containsKey(name) && scope.get(name).getScopeDepth() == scopes.getDepth()) {
                 throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                         vds.getPosition(), vds.getLength());
             }
@@ -195,8 +195,8 @@ public class Interpreter {
                     );
                 }
             }
-            Variable v = new Variable(name, Type.of(vds.getType()), initValue, stack.getDepth());
-            frame.put(name, v);
+            Variable v = new Variable(name, Type.of(vds.getType()), initValue, scopes.getDepth());
+            scope.put(name, v);
             return new StatementResult(StatementResultType.NORMAL);
         } else if (statement instanceof FunctionDefinition fd) {
             String signature = fd.getSignature();
@@ -229,12 +229,12 @@ public class Interpreter {
             return new BooleanObj(b.getValue());
         }
         if (expression instanceof Identifier i) {
-            Frame frame = stack.peek();
-            if (!frame.containsKey(i.getName())) {
+            Scope scope = scopes.current();
+            if (!scope.containsKey(i.getName())) {
                 throw new RuntimeError(String.format("Undefined variable '%s'", i.getName()),
                         i.getPosition(), i.getLength());
             }
-            Variable variable = frame.get(i.getName());
+            Variable variable = scope.get(i.getName());
             if (variable.getValue() == null) {
                 throw new RuntimeError(String.format("Variable '%s' is used before being assigned", i.getName()),
                         i.getPosition(), i.getLength());
@@ -258,11 +258,11 @@ public class Interpreter {
                         call.getPosition(), call.getLength());
             }
             FunctionDefinition fd = functions.get(signature);
-            stack.newFrame();
-            Frame frame = stack.peek();
+            scopes.addFunctionScope();
+            Scope scope = scopes.current();
             var arguments = fd.getArguments();
             for (int i = 0; i < arguments.size(); i++) {
-                frame.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), stack.getDepth()));
+                scope.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), scopes.getDepth()));
             }
 
             validationStack.push(fd);
@@ -270,10 +270,10 @@ public class Interpreter {
             StatementResult result;
             if (fd instanceof NativeFunctionDefinition nfd) {
                 try {
-                    result = nfd.getFunction().run(frame);
+                    result = nfd.getFunction().run(scope);
                 } catch (NativeFunctionException ex) {
                     validationStack.pop();
-                    stack.pop();
+                    scopes.remove();
                     throw ex;
                 }
             } else {
@@ -281,7 +281,7 @@ public class Interpreter {
             }
 
             validationStack.pop();
-            stack.pop();
+            scopes.remove();
 
             if (result instanceof ReturnStatementResult rsr) {
                 return rsr.getReturnValue();
@@ -509,8 +509,8 @@ public class Interpreter {
 
         BaseObj right = evaluate(binaryExpression.getRight());
 
-        Frame frame = stack.peek();
-        Variable variable = frame.get(variableName);
+        Scope scope = scopes.current();
+        Variable variable = scope.get(variableName);
         if (variable.getType() != right.getType()) {
             throw new RuntimeError(String.format("Cannot assign value of type '%s' to variable of type '%s'",
                     right.getType().getName(), variable.getType().getName()),
@@ -541,9 +541,9 @@ public class Interpreter {
             throw new RuntimeError("Left side of assignment must be a variable", left.getPosition(), left.getLength());
         }
 
-        Frame frame = stack.peek();
+        Scope scope = scopes.current();
         String variableName = identifier.getName();
-        if (!frame.containsKey(variableName)) {
+        if (!scope.containsKey(variableName)) {
             throw new RuntimeError(String.format("Undeclared variable '%s'", identifier.getName()),
                     left.getPosition(), left.getLength());
         }

@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
 import org.senthilvsh.saffron.runtime.StatementResult;
@@ -29,7 +29,7 @@ public class ReadLine implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
+    public StatementResult run(Scope scope) {
         return new ReturnStatementResult(new StringObj(new Scanner(System.in).nextLine()));
     }
 }

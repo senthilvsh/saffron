@@ -1,7 +1,7 @@
 package org.senthilvsh.saffron.stdlib.conversion;
 
 import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Frame;
+import org.senthilvsh.saffron.common.Scope;
 import org.senthilvsh.saffron.common.Type;
 import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.runtime.BooleanObj;
@@ -31,8 +31,8 @@ public class BooleanToString implements NativeFunction {
     }
 
     @Override
-    public StatementResult run(Frame frame) {
-        Variable sourceVar = frame.get("source");
+    public StatementResult run(Scope scope) {
+        Variable sourceVar = scope.get("source");
         BooleanObj sourceObj = (BooleanObj) sourceVar.getValue();
         boolean source = sourceObj.getValue();
 

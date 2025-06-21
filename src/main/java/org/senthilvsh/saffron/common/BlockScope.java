@@ -1,4 +1,4 @@
 package org.senthilvsh.saffron.common;
 
-public class BlockFrame extends Frame {
+public class BlockScope extends Scope {
 }
