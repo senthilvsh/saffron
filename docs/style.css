@@ -8,7 +8,7 @@ html {
 }
 
 body {
-    width: 760px;
+    width: 860px;
     padding: 20px;
     margin: 0px auto;
     background-color: #ffffff;
@@ -35,7 +35,7 @@ code {
 
 .footer {
     padding: 25px 0;
-    margin: 50px -20px -20px -20px
+    margin: 50px -20px -20px -20px;
     border-top: solid 10px #ffccaa;
     text-align: center;
 }
