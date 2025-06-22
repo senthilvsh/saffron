@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Saffron - Getting Started</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/saffron/style.css">
+</head>
+
+<body>
+
+<h1>Saffron</h1>
+
+<p><em>A simple, type-safe, general-purpose programming language.</em></p>
+
+<div class="breadcrumb">
+    <a href="/saffron">Home</a> &rsaquo; Getting Started
+</div>
+
+<h2>Getting Started</h2>
+
+<p>Follow the steps below to install and run Saffron programs.</p>
+
+<h3>1. Install</h3>
+
+<p>Saffron comes with a bundled Java Runtime Environment - no separate Java installation required!</p>
+
+<p><strong>For Linux/macOS:</strong></p>
+
+<p>Using <strong>curl</strong>:</p>
+
+<pre><code class="language-bash">curl -sSL \
+https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install.sh | bash
+</code></pre>
+
+<p>...or using <strong>wget</strong>:</p>
+
+<pre><code class="language-bash">wget -qO- \
+https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/install.sh | bash
+</code></pre>
+
+<p><strong>For Windows (PowerShell):</strong></p>
+
+<pre><code class="language-powershell">Invoke-Expression `
+(New-Object System.Net.WebClient).DownloadString( `
+'https://raw.githubusercontent.com/senthilvsh/saffron/master/installers/windows.ps1')
+</code></pre>
+
+<p>The installer will:</p>
+<ol>
+    <li>Detect your operating system and architecture</li>
+    <li>Download and install OpenJDK JRE 17</li>
+    <li>Download and setup Saffron</li>
+    <li>Add Saffron to your PATH</li>
+</ol>
+
+<h3>2. Run a Saffron program <a name="run-saffron-program"></a></h3>
+
+<p>To run a Saffron program called <strong>my-program.sfr</strong>, use the following command.</p>
+
+<pre><code class="language-shell">saffron "my-program.sfr"
+</code></pre>
+
+<h3>3. Uninstall</h3>
+
+<p>To uninstall Saffron:</p>
+<ol>
+    <li>Delete the <strong>.saffron</strong> directory from your user home folder.</li>
+    <li>Remove the path of the above directory from the PATH environment variable.</li>
+</ol>
+
+<div class="footer">
+    <p>Copyright &copy; 2025 - present <a href="https://github.com/senthilvsh">Senthil Kumar</a></p>
+</div>
+
+</body>
+
+</html>
