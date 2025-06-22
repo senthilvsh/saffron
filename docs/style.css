@@ -1,0 +1,34 @@
+html, body {
+    padding: 0;
+    margin: 0;
+}
+
+html {
+    background-color: #ddd;
+}
+
+body {
+    width: 760px;
+    padding: 20px;
+    margin: 0px auto;
+    background-color: #ffffff;
+    font-family: "Roboto", sans-serif;
+    overflow: auto;
+}
+
+pre {
+    padding: 15px;
+    background-color: #ffeedd;
+}
+
+code {
+    font-family: "Roboto Mono", monospace;
+    font-size: 11pt;
+    line-height: 1.5em;
+}
+
+.breadcrumb {
+    padding: 15px;
+    margin: 0 -20px;
+    background-color: #ffccaa;
+}

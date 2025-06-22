@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Saffron - User Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/saffron/style.css">
+</head>
+
+<body>
+
+<h1>Saffron</h1>
+
+<p><em>A simple, type-safe, general-purpose programming language.</em></p>
+
+<div class="breadcrumb">
+    <a href="/saffron">Home</a> &rsaquo; User Guide
+</div>
+
+<h2>User Guide</h2>
+
+<p>This section will walk you through the language features and standard library functions using example programs.
+    You can copy the code in each example below and run it.</p>
+
+<h3>First Program</h3>
+
+<pre><code>writeln("Saffron is awesome!");</code></pre>
+
+<p>The above program writes a string to the console. The <code>writeln()</code> function is a standard library function
+    that prints a given value to the console.</p>
+
+<h3>Variables</h3>
+
+<pre><code>var message:str;
+
+message = "Saffron is awesome!";
+
+writeln(message);</code></pre>
+
+<p>Variables are declared using the <code>var</code> keyword. The type of the variable is specified immediately
+    following the variable name, separated by the <code>:</code> symbol.</p>
+
+<p>Variables can also be initialized at the same time they are declared.</p>
+
+<pre><code>var message:str = "Saffron is awesome!";</code></pre>
+
+<p>Saffron supports three data types:</p>
+
+<ul>
+    <li><p><strong>Number</strong> - is an 8-byte double precision floating point value.</p></li>
+    <li><p><strong>String</strong> - is a sequence of Unicode characters.</p></li>
+    <li><p><strong>Boolean</strong> - is either <code>true</code> or <code>false</code>.</p></li>
+</ul>
+
+<pre><code>var age:num = 30;
+writeln(age);
+
+var is_found:bool = false;
+writeln(is_found);</code></pre>
+
+<h3>User Input</h3>
+
+<pre><code>write("Enter your name: ");
+
+var user:str = readln();
+
+writeln("Namaste " + user + "!");</code></pre>
+
+<p>The <code>readln()</code> function reads one line of text from the console. Also note the use of <code>write</code>
+    instead of <code>writeln</code>. The former will NOT add a new-line character at the end.</p>
+
+<h3>Parse Strings</h3>
+
+<pre><code>write("Enter a number: ");
+
+var str_val:str = readln();
+
+var num_val:num = to_num(str_val);
+
+writeln("I doubled your number: " + num_val * 2);</code></pre>
+
+<p>The <code>to_num()</code> function is used to convert a string to a number.</p>
+
+<h3>Handle Exceptions</h3>
+
+<p>Sometimes, a built-in function will throw an exception if any input is invalid.
+    In the above example, if the user input is not a valid number, an exception will
+    be thrown and the program will terminate.</p>
+
+<p>These exceptions can be handled using the <code>try...catch</code> statement.</p>
+
+<pre><code>write("Enter a number: ");
+
+var inp:str = readln();      // Enter 'abcd' as input
+
+writeln(to_num(inp) * 2);    // Will throw exception and terminate
+
+// BUT, using a try...catch block, we can handle the exception
+try {
+   writeln(to_num(inp) * 2);
+} catch (type:str, msg:str) {
+   if (type == "FORMAT_EXCEPTION") {
+      writeln(inp + " is not a proper number!");
+   }
+}</code></pre>
+
+<p>A catch statement MUST have two and ONLY two parameters and both of them must of <em><strong>string</strong></em>
+    type. The first parameter will have the type of exception and the second parameter will have the message
+    describing the exception.</p>
+
+<p><em><strong>The documentation for each standard library function will list the type of exceptions
+        thrown by that function.</strong></em></p>
+
+<h3>Conditional Statements</h3>
+
+<pre><code>write("Enter first number: ");
+var n1:num = to_num(readln());
+
+write("Enter second number: ");
+var n2:num = to_num(readln());
+
+if (n1 &gt; n2) {
+    writeln("First number is greater than second number");
+} else if (n1 &lt; n2) {
+    writeln("First number is less than second number");
+} else {
+    writeln("First number is equal to second number");
+}</code></pre>
+
+<p>The <code>if</code> keyword is used to execute a block of statements if a condition is true.
+        The <code>else</code> keyword is used to execute a block of statements if the above condition is false.
+        You can also chain if-else statements to check a series of conditions as shown above.</p>
+
+<h3>Loops</h3>
+
+<pre><code>var i:num = 1;
+
+while (i &lt;= 10) {
+    writeln(i);
+    i = i + 1;
+}</code></pre>
+
+<p>The above program uses the <code>while</code> loop to print numbers from 1 to 10.</p>
+
+<p>Aside from the loop condition, you can control the execution of loops using the <code>break</code> and
+    <code>continue</code> statements.</p>
+
+<pre><code>var i:num = 1;
+
+while (i &lt;= 10) {
+    if (i % 2 == 0) {
+        i = i + 1;
+        continue;
+    }
+    writeln(i);
+    i = i + 1;
+}</code></pre>
+
+<p>In the above program, we check whether the current value of <code>i</code> is an even number
+    and skip the current iteration using the <code>continue</code> statement. Similarly, a <code>break</code> statement
+    can be used to exit a loop.</p>
+
+<h3>Functions</h3>
+
+<pre><code>fun greet(user: str): str {
+    return "Namaste " + user + "!";
+}
+
+write("Enter your name: ");
+
+var user:str = readln();
+
+writeln(greet(user));</code></pre>
+
+<p>In the above program, we define a function called <em><strong>greet</strong></em> which takes a string parameter and
+    returns a greeting.</p>
+
+<p>A function is defined using the <code>fun</code> keyword, followed by the name of the function.
+    The name of the function must be followed by a pair of open and close brackets <code>()</code>.</p>
+
+<p>The function can optionally have arguments which are declared similar to variable declarations,
+    but without the <code>var</code> keyword. These arguments must be specified inside the open and close brackets.</p>
+
+<p>The return type of the function is specified immediately after the closing bracket <code>)</code>,
+    separated by the <code>:</code> symbol. Functions that do not return any value must have the <code>void</code>
+    return type.</p>
+
+<p>After the return type, the body of the function must be speficied in the form of a statement block.</p>
+
+<pre><code>fun print_something(msg: str): void {
+    writeln(msg);
+}
+
+print_something("Saffron is awesome!");</code></pre>
+
+<p>Note that <strong>void</strong> is not a proper data type i.e, it cannot be used in variable declarations.
+    It is used only in the case of functions that do not return any value.</p>
+
+<h2>Type Safety <a name="type-safety"></a></h2>
+
+<p>Saffron is a type-safe language. It makes a number of validations before running a program, to find type-related
+    and other errors.</p>
+
+<p>All variables must be declared before being used.</p>
+
+<pre><code>// var a:num
+
+a = 10; // error</code></pre>
+
+<p>A variable cannot be redeclared in the same scope</p>
+
+<pre><code>var a:num = 10;
+var a:num = 20;    // error, 'a' is already declared in this scope
+
+fun test(): void {
+    var a:num = 20;    // OK, because a function introduces a new scope
+}</code></pre>
+
+<p>All variables must specify their type.</p>
+
+<pre><code>var a = 10; // error</code></pre>
+
+<p>A value assigned to a variable must be of the same type.</p>
+
+<pre><code>var a:num = 10;        // OK
+var b:num = "abcd";    // error
+var c:str = 10 * 20;   // error</code></pre>
+
+<p>In an expression, the type of operands must match the types allowed by the operators.</p>
+
+<pre><code>var a:num = 12 * "abcd"; // error, cannot multiply number and string
+var b:str = -"abcd";     // error, unary - not allowed for string</code></pre>
+
+<p>All functions must specify a return type.</p>
+
+<pre><code>fun test() {    // error, missing return type
+}</code></pre>
+
+<p>Function must return values matching its return type.</p>
+
+<pre><code>fun test(): str {
+    return 10;    // error, type of returned value doesn't match the return type
+}</code></pre>
+
+<p>Type of each argument passed to a function must match the type of the declared argument</p>
+
+<pre><code>fun add(a: num, b: num): num {
+    return a + b;
+}
+
+var res:num = add("1", 2); // error, type of 1st arg doesn't match declared type</code></pre>
+
+</body>
+
+</html>
