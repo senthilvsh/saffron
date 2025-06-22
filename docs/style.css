@@ -32,3 +32,8 @@ code {
     margin: 0 -20px;
     background-color: #ffccaa;
 }
+
+.footer {
+    padding: 50px 0;
+    text-align: center;
+}
