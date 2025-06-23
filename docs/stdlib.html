@@ -17,95 +17,136 @@
 
 <p><em>A general-purpose programming language with dynamic typing.</em></p>
 
+
 <div class="breadcrumb">
     <a href="/saffron">Home</a> &rsaquo; Standard Library
 </div>
 
+
 <h2>Standard Library</h2>
+
 <p>Saffron comes with a standard library of functions that provide support for console I/O, string manipulation
     and data conversion.</p>
 
+
 <h3>Console</h3>
 
+
 <h4>writeln</h4>
+
 <p>Write the given value to the console, followed by a new-line character at the end.</p>
-<pre><code>writeln(value: num): void;
-writeln(value: str): void;
-writeln(value: bool): void;</code></pre>
+
+<pre><code>writeln(value)</code></pre>
+
 
 <h4>write</h4>
+
 <p>Write the given value to the console <em>(no new-line character at the end)</em>.</p>
-<pre><code>write(value: num): void;
-write(value: str): void;
-write(value: bool): void;</code></pre>
+
+<pre><code>write(value)</code></pre>
+
 
 <h4>readln</h4>
+
 <p>Read a line of text from the console. Returns when the user presses ENTER.</p>
-<pre><code>readln(): str;</code></pre>
+
+<pre><code>readln()</code></pre>
+
 
 <h3>Strings</h3>
 
+
 <h4>str_length</h4>
+
 <p>Get the length of the <em><strong>source</strong></em> string.</p>
-<pre><code>str_length(source: str): num</code></pre>
+
+<pre><code>str_length(source)</code></pre>
+
 
 <h4>str_substr</h4>
+
 <p>Get a sub-string of the <em><strong>source</strong></em> string.</p>
+
 <p>The sub-string will be from the <em><strong>start</strong></em> position till the <em><strong>end</strong></em>
     position, inclusive.</p>
-<p>The overload without the <em><strong>end</strong></em> argument will return the sub-string from
-    the <em><strong>start</strong></em> position till the end of the <em><strong>source</strong></em> string.</p>
+
 <p>Positions are zero-based i.e., the position of the first character is <em><strong>0</strong></em>
     and the position of the last character is <em><strong>length - 1</strong></em>.</p>
+
 <p>Throws <code>INDEX_OUT_OF_BOUNDS_EXCEPTION</code> if the value of <em><strong>start</strong></em> or
-    <em><strong>end</strong></em>
-    is outside
-    the range <code>[0 to length-1]</code>.</p>
-<pre><code>str_substr(source: str, start: num): str
-str_substr(source: str, start: num, end: num): str</code></pre>
+    <em><strong>end</strong></em> is outside the range <code>[0 to length-1]</code>.</p>
+
+<pre><code>str_substr(source, start, end)</code></pre>
+
 
 <h4>str_replace</h4>
+
 <p>Replace all occurrences of <em><strong>search</strong></em> with <em><strong>replace</strong></em>, in
     <em><strong>source</strong></em>.</p>
+
 <p>This function does not modify the original string, but returns a new one.</p>
-<pre><code>str_replace(source: str, search: str, replace: str): str</code></pre>
+
+<pre><code>str_replace(source, search, replace)</code></pre>
+
 
 <h4>str_trim</h4>
+
 <p>Trim whitespace from the beginning and end of the <em><strong>source</strong></em> string.</p>
+
 <p>This function does not modify the original string, but returns a new one.</p>
-<pre><code>str_trim(source: str): str</code></pre>
+
+<pre><code>str_trim(source)</code></pre>
+
 
 <h4>str_contains</h4>
-<p>Find whether the <em><strong>source</strong></em> string contains the <em><strong>search</strong></em> string.
-</p>
-<pre><code>str_contains(source: str, search: str): bool</code></pre>
+
+<p>Find whether the <em><strong>source</strong></em> string contains the <em><strong>search</strong></em> string.</p>
+
+<pre><code>str_contains(source, search)</code></pre>
+
 
 <h4>str_startswith</h4>
-<p>Find whether the <em><strong>source</strong></em> string starts with the <em><strong>search</strong></em> string.
-</p>
-<pre><code>str_startswith(source: str, search: str): bool</code></pre>
+
+<p>Find whether the <em><strong>source</strong></em> string starts with the <em><strong>search</strong></em> string.</p>
+
+<pre><code>str_startswith(source, search)</code></pre>
+
 
 <h4>str_endswith</h4>
-<p>Find whether the <em><strong>source</strong></em> string ends with the <em><strong>search</strong></em> string.
-</p>
-<pre><code>str_endswith(source: str, search: str): bool</code></pre>
+
+<p>Find whether the <em><strong>source</strong></em> string ends with the <em><strong>search</strong></em> string.</p>
+
+<pre><code>str_endswith(source, search)</code></pre>
+
 
 <h3>Data Conversion</h3>
 
+
 <h4>to_num</h4>
+
 <p>Parse the <em><strong>source</strong></em> string as a number.</p>
+
 <p>Throws <code>FORMAT_EXCEPTION</code> if <em><strong>source</strong></em> is not in a valid number format.</p>
-<pre><code>to_num(source: str): num</code></pre>
+
+<pre><code>to_num(source)</code></pre>
+
 
 <h4>to_bool</h4>
+
 <p>Parse the <em><strong>source</strong></em> string as a boolean.</p>
+
 <p>Throws <code>FORMAT_EXCEPTION</code> if <em><strong>source</strong></em> is not a valid boolean value.</p>
-<pre><code>to_bool(source: str): bool</code></pre>
+
+<pre><code>to_bool(source)</code></pre>
+
 
 <h4>to_str</h4>
-<p>Convert the <em><strong>source</strong></em> value to its string representation.</p>
-<pre><code>to_str(source: num): str
-to_str(source: bool): str</code></pre>
+
+<p>Convert the <em><strong>source</strong></em> value to its string representation. The source value can be
+a number, boolean or string</p>
+
+<pre><code>to_str(source)</code></pre>
+
 
 <div class="footer">
     <p>Copyright &copy; 2025 - present <a href="https://github.com/senthilvsh">Senthil Kumar</a></p>

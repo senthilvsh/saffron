@@ -6,7 +6,7 @@
 
     <groupId>org.senthilvsh</groupId>
     <artifactId>saffron</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <description>Saffron is a general-purpose programming language with dynamic typing</description>
 
     <properties>

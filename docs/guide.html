@@ -35,20 +35,19 @@
 
 <h3>Variables</h3>
 
-<pre><code>var message:str;
+<pre><code>var message;
 
 message = "Saffron is awesome!";
 
 writeln(message);</code></pre>
 
-<p>Variables are declared using the <code>var</code> keyword. The type of the variable is specified immediately
-    following the variable name, separated by the <code>:</code> symbol.</p>
+<p>Variables are declared using the <code>var</code> keyword.</p>
 
 <p>Variables can also be initialized at the same time they are declared.</p>
 
-<pre><code>var message:str = "Saffron is awesome!";</code></pre>
+<pre><code>var message = "Saffron is awesome!";</code></pre>
 
-<p>Saffron supports three data types:</p>
+<p>Saffron supports three data types.</p>
 
 <ul>
     <li><p><strong>Number</strong> - is an 8-byte double precision floating point value.</p></li>
@@ -56,17 +55,17 @@ writeln(message);</code></pre>
     <li><p><strong>Boolean</strong> - is either <code>true</code> or <code>false</code>.</p></li>
 </ul>
 
-<pre><code>var age:num = 30;
+<pre><code>var age = 30;
 writeln(age);
 
-var is_found:bool = false;
+var is_found = false;
 writeln(is_found);</code></pre>
 
 <h3>User Input</h3>
 
 <pre><code>write("Enter your name: ");
 
-var user:str = readln();
+var user = readln();
 
 writeln("Namaste " + user + "!");</code></pre>
 
@@ -77,11 +76,11 @@ writeln("Namaste " + user + "!");</code></pre>
 
 <pre><code>write("Enter a number: ");
 
-var str_val:str = readln();
+var str = readln();
 
-var num_val:num = to_num(str_val);
+var num = to_num(str);
 
-writeln("I doubled your number: " + num_val * 2);</code></pre>
+writeln("I doubled your number: " + num * 2);</code></pre>
 
 <p>The <code>to_num()</code> function is used to convert a string to a number.</p>
 
@@ -95,22 +94,21 @@ writeln("I doubled your number: " + num_val * 2);</code></pre>
 
 <pre><code>write("Enter a number: ");
 
-var inp:str = readln();      // Enter 'abcd' as input
+var inp = readln();          // Enter 'abcd' as input
 
 writeln(to_num(inp) * 2);    // Will throw exception and terminate
 
 // BUT, using a try...catch block, we can handle the exception
 try {
    writeln(to_num(inp) * 2);
-} catch (type:str, msg:str) {
+} catch (type, msg) {
    if (type == "FORMAT_EXCEPTION") {
       writeln(inp + " is not a proper number!");
    }
 }</code></pre>
 
-<p>A catch statement MUST have two and ONLY two parameters and both of them must of <em><strong>string</strong></em>
-    type. The first parameter will have the type of exception and the second parameter will have the message
-    describing the exception.</p>
+<p>A catch statement MUST have two and ONLY two parameters. The first parameter will have the type of exception
+    and the second parameter will have the message describing the exception.</p>
 
 <p><em><strong>The documentation for each standard library function will list the type of exceptions
         thrown by that function.</strong></em></p>
@@ -118,10 +116,10 @@ try {
 <h3>Conditional Statements</h3>
 
 <pre><code>write("Enter first number: ");
-var n1:num = to_num(readln());
+var n1 = to_num(readln());
 
 write("Enter second number: ");
-var n2:num = to_num(readln());
+var n2 = to_num(readln());
 
 if (n1 &gt; n2) {
     writeln("First number is greater than second number");
@@ -137,7 +135,7 @@ if (n1 &gt; n2) {
 
 <h3>Loops</h3>
 
-<pre><code>var i:num = 1;
+<pre><code>var i = 1;
 
 while (i &lt;= 10) {
     writeln(i);
@@ -149,7 +147,7 @@ while (i &lt;= 10) {
 <p>Aside from the loop condition, you can control the execution of loops using the <code>break</code> and
     <code>continue</code> statements.</p>
 
-<pre><code>var i:num = 1;
+<pre><code>var i = 1;
 
 while (i &lt;= 10) {
     if (i % 2 == 0) {
@@ -161,22 +159,22 @@ while (i &lt;= 10) {
 }</code></pre>
 
 <p>In the above program, we check whether the current value of <code>i</code> is an even number
-    and skip the current iteration using the <code>continue</code> statement. Similarly, a <code>break</code> statement
-    can be used to exit a loop.</p>
+    and skip the current iteration using the <code>continue</code> statement.
+    Similarly, a <code>break</code> statement can be used to exit a loop.</p>
 
 <h3>Functions</h3>
 
-<pre><code>fun greet(user: str): str {
+<pre><code>fun greet(user) {
     return "Namaste " + user + "!";
 }
 
 write("Enter your name: ");
 
-var user:str = readln();
+var user = readln();
 
 writeln(greet(user));</code></pre>
 
-<p>In the above program, we define a function called <em><strong>greet</strong></em> which takes a string parameter and
+<p>In the above program, we define a function called <em><strong>greet</strong></em> which takes one parameter and
     returns a greeting.</p>
 
 <p>A function is defined using the <code>fun</code> keyword, followed by the name of the function.
@@ -185,74 +183,13 @@ writeln(greet(user));</code></pre>
 <p>The function can optionally have arguments which are declared similar to variable declarations,
     but without the <code>var</code> keyword. These arguments must be specified inside the open and close brackets.</p>
 
-<p>The return type of the function is specified immediately after the closing bracket <code>)</code>,
-    separated by the <code>:</code> symbol. Functions that do not return any value must have the <code>void</code>
-    return type.</p>
+<p>The body of the function must be specified in the form of a statement block.</p>
 
-<p>After the return type, the body of the function must be speficied in the form of a statement block.</p>
-
-<pre><code>fun print_something(msg: str): void {
+<pre><code>fun print_something(msg) {
     writeln(msg);
 }
 
 print_something("Saffron is awesome!");</code></pre>
-
-<p>Note that <strong>void</strong> is not a proper data type i.e, it cannot be used in variable declarations.
-    It is used only in the case of functions that do not return any value.</p>
-
-<h2>Type Safety <a name="type-safety"></a></h2>
-
-<p>Saffron is a type-safe language. It makes a number of validations before running a program, to find type-related
-    and other errors.</p>
-
-<p>All variables must be declared before being used.</p>
-
-<pre><code>// var a:num
-
-a = 10; // error</code></pre>
-
-<p>A variable cannot be redeclared in the same scope</p>
-
-<pre><code>var a:num = 10;
-var a:num = 20;    // error, 'a' is already declared in this scope
-
-fun test(): void {
-    var a:num = 20;    // OK, because a function introduces a new scope
-}</code></pre>
-
-<p>All variables must specify their type.</p>
-
-<pre><code>var a = 10; // error</code></pre>
-
-<p>A value assigned to a variable must be of the same type.</p>
-
-<pre><code>var a:num = 10;        // OK
-var b:num = "abcd";    // error
-var c:str = 10 * 20;   // error</code></pre>
-
-<p>In an expression, the type of operands must match the types allowed by the operators.</p>
-
-<pre><code>var a:num = 12 * "abcd"; // error, cannot multiply number and string
-var b:str = -"abcd";     // error, unary - not allowed for string</code></pre>
-
-<p>All functions must specify a return type.</p>
-
-<pre><code>fun test() {    // error, missing return type
-}</code></pre>
-
-<p>Function must return values matching its return type.</p>
-
-<pre><code>fun test(): str {
-    return 10;    // error, type of returned value doesn't match the return type
-}</code></pre>
-
-<p>Type of each argument passed to a function must match the type of the declared argument</p>
-
-<pre><code>fun add(a: num, b: num): num {
-    return a + b;
-}
-
-var res:num = add("1", 2); // error, type of 1st arg doesn't match declared type</code></pre>
 
 <div class="footer">
     <p>Copyright &copy; 2025 - present <a href="https://github.com/senthilvsh">Senthil Kumar</a></p>
