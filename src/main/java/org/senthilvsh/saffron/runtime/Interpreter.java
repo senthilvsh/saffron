@@ -1,14 +1,9 @@
 package org.senthilvsh.saffron.runtime;
 
 import org.senthilvsh.saffron.ast.*;
-import org.senthilvsh.saffron.common.Scope;
-import org.senthilvsh.saffron.common.Scopes;
-import org.senthilvsh.saffron.common.Type;
-import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.stdlib.NativeFunctionsRegistry;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Interpreter {
     private final Stack<Statement> validationStack = new Stack<>();
@@ -78,17 +73,9 @@ public class Interpreter {
             );
         }
         Expression expression = rs.getExpression();
-        BaseObj returnValue = null;
+        Object returnValue = null;
         if (expression != null) {
             returnValue = evaluate(expression);
-        }
-
-        if (returnValue != null && returnValue.getType() != containingFunction.getReturnType()) {
-            throw new RuntimeError(
-                    "The type of the return value does not match the function's return type",
-                    rs.getPosition(),
-                    rs.getLength()
-            );
         }
 
         return new ReturnStatementResult(returnValue);
@@ -96,13 +83,12 @@ public class Interpreter {
 
     private StatementResult executeConditionalStatement(ConditionalStatement cs) throws RuntimeError {
         Expression condition = cs.getCondition();
-        BaseObj baseObj = evaluate(condition);
-        if (baseObj.getType() != Type.BOOLEAN) {
+        Object baseObj = evaluate(condition);
+        if (!(baseObj instanceof Boolean conditionResult)) {
             throw new RuntimeError("The condition of an 'if' statement must be a boolean expression",
                     condition.getPosition(), condition.getLength());
         }
-        BooleanObj conditionResult = (BooleanObj) baseObj;
-        if (conditionResult.getValue()) {
+        if (conditionResult) {
             StatementResult result;
             scopes.addBlockScope();
             result = execute(cs.getTrueClause());
@@ -136,21 +122,19 @@ public class Interpreter {
 
             scopes.addBlockScope();
 
-            String typeArgName = tcs.getExceptionType().getName();
+            String typeArgName = tcs.getExceptionType();
             String typeArgValue = ex.getType();
             Variable typeArgVariable = new Variable(
                     typeArgName,
-                    Type.STRING,
-                    new StringObj(typeArgValue),
+                    typeArgValue,
                     scopes.getDepth()
             );
 
-            String msgArgName = tcs.getExceptionMessage().getName();
+            String msgArgName = tcs.getExceptionMessage();
             String msgArgValue = ex.getMessage();
             Variable msgArgVariable = new Variable(
                     msgArgName,
-                    Type.STRING,
-                    new StringObj(msgArgValue),
+                    msgArgValue,
                     scopes.getDepth()
             );
 
@@ -171,21 +155,21 @@ public class Interpreter {
 
     private StatementResult executeWhileLoop(WhileLoop wl) throws RuntimeError {
         Expression condition = wl.getCondition();
-        BaseObj baseObj = evaluate(condition);
-        if (baseObj.getType() != Type.BOOLEAN) {
+        Object baseObj = evaluate(condition);
+        if (!(baseObj instanceof Boolean conditionResult)) {
             throw new RuntimeError("The condition of a 'while' loop must be a boolean expression",
                     condition.getPosition(), condition.getLength());
         }
-        BooleanObj conditionResult = (BooleanObj) baseObj;
+
         validationStack.push(wl);
-        while (conditionResult.getValue()) {
+        while (conditionResult != null && conditionResult) {
             scopes.addBlockScope();
             StatementResult result = execute(wl.getBody());
             scopes.remove();
             if (result.getType() == StatementResultType.BREAK) {
                 break;
             }
-            conditionResult = (BooleanObj) evaluate(condition);
+            conditionResult = (Boolean) evaluate(condition);
         }
         validationStack.pop();
         return new StatementResult(StatementResultType.NORMAL);
@@ -215,59 +199,41 @@ public class Interpreter {
 
     private StatementResult executeVariableDeclaration(VariableDeclaration vd) throws RuntimeError {
         String name = vd.getName();
-        Type variableType = Type.of(vd.getType());
         Scope scope = scopes.current();
         if (scope.containsKey(name) && scope.get(name).getScopeDepth() == scopes.getDepth()) {
             throw new RuntimeError(String.format("Re-declaration of variable '%s'", name),
                     vd.getPosition(), vd.getLength());
         }
-        if (variableType == Type.VOID) {
-            throw new RuntimeError(String.format("Variables cannot have '%s' type", Type.VOID.getName()),
-                    vd.getPosition(), vd.getLength());
-        }
-        BaseObj initValue = null;
+        Object initValue = null;
         if (vd.getExpression() != null) {
             initValue = evaluate(vd.getExpression());
-            if (initValue.getType() != variableType) {
-                throw new RuntimeError(
-                        String.format("Value of type '%s' cannot be assigned to variable of type '%s'",
-                                initValue.getType().getName(), variableType.getName()),
-                        vd.getExpression().getPosition(),
-                        vd.getExpression().getLength()
-                );
-            }
         }
-        Variable v = new Variable(name, Type.of(vd.getType()), initValue, scopes.getDepth());
+        Variable v = new Variable(name, initValue, scopes.getDepth());
         scope.put(name, v);
         return new StatementResult(StatementResultType.NORMAL);
     }
 
     private StatementResult executeFunctionDefinition(FunctionDefinition fd) throws RuntimeError {
-        String signature = fd.getSignature();
-        if (functions.containsKey(signature)) {
+        String name = fd.getName();
+        if (functions.containsKey(name)) {
             throw new RuntimeError(
-                    String.format("Function re-declaration: %s(%s)",
-                            fd.getName(),
-                            fd.getArguments()
-                                    .stream()
-                                    .map(a -> a.getType().getName().toLowerCase())
-                                    .collect(Collectors.joining(","))),
+                    String.format("Function re-declaration: %s", fd.getName()),
                     fd.getNamePosition(),
                     fd.getNameLength());
         }
-        functions.put(signature, fd);
+        functions.put(name, fd);
         return new StatementResult(StatementResultType.NORMAL);
     }
 
-    private BaseObj evaluate(Expression expression) throws RuntimeError {
+    private Object evaluate(Expression expression) throws RuntimeError {
         if (expression instanceof NumberLiteral n) {
-            return new NumberObj(n.getValue());
+            return n.getValue();
         }
         if (expression instanceof StringLiteral s) {
-            return new StringObj(s.getValue());
+            return s.getValue();
         }
         if (expression instanceof BooleanLiteral b) {
-            return new BooleanObj(b.getValue());
+            return b.getValue();
         }
         if (expression instanceof Identifier i) {
             Scope scope = scopes.current();
@@ -284,26 +250,21 @@ public class Interpreter {
         }
         if (expression instanceof FunctionCallExpression call) {
             String name = call.getName();
-            String signature = name;
-            List<BaseObj> args = new ArrayList<>();
+            List<Object> args = new ArrayList<>();
             for (Expression e : call.getArguments()) {
                 args.add(evaluate(e));
             }
-            List<String> argTypes = args.stream().map(a -> a == null ? "" : a.getType().getName().toLowerCase()).toList();
-            if (!argTypes.isEmpty()) {
-                signature += "_" + String.join("_", argTypes);
-            }
-            if (!functions.containsKey(signature)) {
+            if (!functions.containsKey(name)) {
                 throw new RuntimeError(
-                        String.format("Undeclared function %s(%s)", name, String.join(",", argTypes)),
+                        String.format("Undeclared function %s", name),
                         call.getPosition(), call.getLength());
             }
-            FunctionDefinition fd = functions.get(signature);
+            FunctionDefinition fd = functions.get(name);
             scopes.addFunctionScope();
             Scope scope = scopes.current();
             var arguments = fd.getArguments();
             for (int i = 0; i < arguments.size(); i++) {
-                scope.put(arguments.get(i).getName(), new Variable(arguments.get(i).getName(), arguments.get(i).getType(), args.get(i), scopes.getDepth()));
+                scope.put(arguments.get(i), new Variable(arguments.get(i), args.get(i), scopes.getDepth()));
             }
 
             validationStack.push(fd);
@@ -318,7 +279,7 @@ public class Interpreter {
                     throw ex;
                 }
             } else {
-                result = execute(functions.get(signature).getBody());
+                result = execute(functions.get(name).getBody());
             }
 
             validationStack.pop();
@@ -333,33 +294,31 @@ public class Interpreter {
         if (expression instanceof UnaryExpression unaryExpression) {
             String operator = unaryExpression.getOperator();
             Expression operand = unaryExpression.getOperand();
-            BaseObj baseObj = evaluate(operand);
+            Object baseObj = evaluate(operand);
             if ("+-".contains(operator)) {
-                if (baseObj.getType() != Type.NUMBER) {
+                if (!(baseObj instanceof Double numberObj)) {
                     throw new RuntimeError(
-                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getType().getName()),
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getClass()),
                             unaryExpression.getOperatorPosition(),
                             unaryExpression.getOperatorLength()
                     );
                 }
                 if ("+".equals(operator)) {
-                    return baseObj;
+                    return numberObj;
                 }
                 if ("-".equals(operator)) {
-                    NumberObj numberObj = (NumberObj) baseObj;
-                    return new NumberObj(-1 * numberObj.getValue());
+                    return -1 * numberObj;
                 }
             }
             if ("!".contains(operator)) {
-                if (baseObj.getType() != Type.BOOLEAN) {
+                if (!(baseObj instanceof Boolean booleanObj)) {
                     throw new RuntimeError(
-                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getType().getName()),
+                            String.format("Operation '%s' cannot be applied to '%s'", operator, baseObj.getClass()),
                             unaryExpression.getOperatorPosition(),
                             unaryExpression.getOperatorLength()
                     );
                 }
-                BooleanObj booleanObj = (BooleanObj) baseObj;
-                return new BooleanObj(!booleanObj.getValue());
+                return !booleanObj;
             }
             throw new RuntimeError(
                     String.format("Invalid unary operator '%s'", operator),
@@ -374,8 +333,8 @@ public class Interpreter {
                 return assign(binaryExpression);
             }
 
-            BaseObj left = evaluate(binaryExpression.getLeft());
-            BaseObj right = evaluate(binaryExpression.getRight());
+            Object left = evaluate(binaryExpression.getLeft());
+            Object right = evaluate(binaryExpression.getRight());
 
             try {
                 if ("+".equals(operator)) {
@@ -419,160 +378,119 @@ public class Interpreter {
                 }
             } catch (RuntimeException ex) {
                 throw new RuntimeError(String.format("Cannot perform operation '%s' on %s and %s", operator,
-                        left.getType().getName(), right.getType().getName()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
+                        left.getClass(), right.getClass()), binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
             }
         }
         throw new RuntimeError("Unknown expression type", expression.getPosition(), expression.getLength());
     }
 
-    private BaseObj add(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new NumberObj(((NumberObj) left).getValue() + ((NumberObj) right).getValue());
+    private Object add(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l + r;
         }
-        if (left.getType() == Type.STRING || right.getType() == Type.STRING) {
-            String leftStr = stringValue(left);
-            String rightStr = stringValue(right);
-            return new StringObj(leftStr + rightStr);
-        }
-        throw new RuntimeException();
-    }
-
-    private BaseObj subtract(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new NumberObj(((NumberObj) left).getValue() - ((NumberObj) right).getValue());
+        if (left instanceof String l || right instanceof String r) {
+            String leftStr = left.toString();
+            String rightStr = right.toString();
+            return leftStr + rightStr;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj multiply(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new NumberObj(((NumberObj) left).getValue() * ((NumberObj) right).getValue());
+    private Object subtract(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l - r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj divide(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new NumberObj(((NumberObj) left).getValue() / ((NumberObj) right).getValue());
+    private Object multiply(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l * r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj modulo(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new NumberObj(((NumberObj) left).getValue() % ((NumberObj) right).getValue());
+    private Object divide(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l / r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj greaterThan(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new BooleanObj(((NumberObj) left).getValue() > ((NumberObj) right).getValue());
+    private Object modulo(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l % r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj greaterThanOrEqual(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new BooleanObj(((NumberObj) left).getValue() >= ((NumberObj) right).getValue());
+    private Object greaterThan(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l > r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj lessThan(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new BooleanObj(((NumberObj) left).getValue() < ((NumberObj) right).getValue());
+    private Object greaterThanOrEqual(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l >= r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj lessThanOrEqual(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.NUMBER && right.getType() == Type.NUMBER) {
-            return new BooleanObj(((NumberObj) left).getValue() <= ((NumberObj) right).getValue());
+    private Object lessThan(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l < r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj equal(BaseObj left, BaseObj right) {
-        if (left.getType() == right.getType()) {
-            if (left.getType() == Type.NUMBER) {
-                return new BooleanObj(((NumberObj) left).getValue() == ((NumberObj) right).getValue());
-            } else if (left.getType() == Type.STRING) {
-                return new BooleanObj(((StringObj) left).getValue().equals(((StringObj) right).getValue()));
-            } else if (left.getType() == Type.BOOLEAN) {
-                return new BooleanObj(((BooleanObj) left).getValue() == ((BooleanObj) right).getValue());
-            } else {
-                // Not a type that supports == operator
-                throw new RuntimeException();
-            }
+    private Object lessThanOrEqual(Object left, Object right) {
+        if (left instanceof Double l && right instanceof Double r) {
+            return l <= r;
+        }
+        throw new RuntimeException();
+    }
+
+    private Object equal(Object left, Object right) {
+        if (left.getClass().equals(right.getClass())) {
+            return left.equals(right);
         }
         // Types of left and right are different
         throw new RuntimeException();
     }
 
-    private BaseObj notEqual(BaseObj left, BaseObj right) {
-        if (left.getType() == right.getType()) {
-            if (left.getType() == Type.NUMBER) {
-                return new BooleanObj(((NumberObj) left).getValue() != ((NumberObj) right).getValue());
-            } else if (left.getType() == Type.STRING) {
-                return new BooleanObj(!((StringObj) left).getValue().equals(((StringObj) right).getValue()));
-            } else if (left.getType() == Type.BOOLEAN) {
-                return new BooleanObj(((BooleanObj) left).getValue() != ((BooleanObj) right).getValue());
-            } else {
-                // Not a type that supports != operator
-                throw new RuntimeException();
-            }
+    private Object notEqual(Object left, Object right) {
+        if (left.getClass().equals(right.getClass())) {
+            return !left.equals(right);
         }
         // Types of left and right are different
         throw new RuntimeException();
     }
 
-    private BaseObj logicalAnd(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
-            BooleanObj leftBoolean = (BooleanObj) left;
-            BooleanObj rightBoolean = (BooleanObj) right;
-            return new BooleanObj(leftBoolean.getValue() && rightBoolean.getValue());
+    private Object logicalAnd(Object left, Object right) {
+        if (left instanceof Boolean l && right instanceof Boolean r) {
+            return l && r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj logicalOr(BaseObj left, BaseObj right) {
-        if (left.getType() == Type.BOOLEAN && right.getType() == Type.BOOLEAN) {
-            BooleanObj leftBoolean = (BooleanObj) left;
-            BooleanObj rightBoolean = (BooleanObj) right;
-            return new BooleanObj(leftBoolean.getValue() || rightBoolean.getValue());
+    private Object logicalOr(Object left, Object right) {
+        if (left instanceof Boolean l && right instanceof Boolean r) {
+            return l || r;
         }
         throw new RuntimeException();
     }
 
-    private BaseObj assign(BinaryExpression binaryExpression) throws RuntimeError {
+    private Object assign(BinaryExpression binaryExpression) throws RuntimeError {
         String variableName = getVariableName(binaryExpression);
 
-        BaseObj right = evaluate(binaryExpression.getRight());
+        Object right = evaluate(binaryExpression.getRight());
 
-        Scope scope = scopes.current();
-        Variable variable = scope.get(variableName);
-        if (variable.getType() != right.getType()) {
-            throw new RuntimeError(String.format("Cannot assign value of type '%s' to variable of type '%s'",
-                    right.getType().getName(), variable.getType().getName()),
-                    binaryExpression.getOperatorPosition(), binaryExpression.getOperatorLength());
-        }
+        Variable variable = scopes.current().get(variableName);
+        variable.setValue(right);
 
-        BaseObj newObj;
-
-        if (right instanceof NumberObj n) {
-            newObj = new NumberObj(n.getValue());
-        } else if (right instanceof StringObj s) {
-            newObj = new StringObj(s.getValue());
-        } else if (right instanceof BooleanObj b) {
-            newObj = new BooleanObj(b.getValue());
-        } else {
-            newObj = right;
-        }
-
-        variable.setValue(newObj);
-
-        return newObj;
+        return right;
     }
 
     private String getVariableName(BinaryExpression binaryExpression) throws RuntimeError {
@@ -589,23 +507,5 @@ public class Interpreter {
                     left.getPosition(), left.getLength());
         }
         return variableName;
-    }
-
-    private String stringValue(BaseObj obj) {
-        if (obj instanceof NumberObj numberObj) {
-            double val = numberObj.getValue();
-            if (val == (long) val) {
-                return String.format("%d", (long) numberObj.getValue());
-            } else {
-                return String.valueOf(numberObj.getValue());
-            }
-        }
-        if (obj instanceof StringObj stringObj) {
-            return stringObj.getValue();
-        }
-        if (obj instanceof BooleanObj booleanObj) {
-            return String.valueOf(booleanObj.getValue());
-        }
-        return obj.toString();
     }
 }

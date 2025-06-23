@@ -1,9 +1,5 @@
 package org.senthilvsh.saffron.stdlib.string;
 
-import org.senthilvsh.saffron.ast.FunctionArgument;
-import org.senthilvsh.saffron.common.Scope;
-import org.senthilvsh.saffron.common.Type;
-import org.senthilvsh.saffron.common.Variable;
 import org.senthilvsh.saffron.runtime.*;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
@@ -16,32 +12,20 @@ public class StringSubString implements NativeFunction {
     }
 
     @Override
-    public List<FunctionArgument> getArguments() {
-        return List.of(
-                new FunctionArgument("source", Type.STRING),
-                new FunctionArgument("start", Type.NUMBER),
-                new FunctionArgument("end", Type.NUMBER)
-        );
-    }
-
-    @Override
-    public Type getReturnType() {
-        return Type.STRING;
+    public List<String> getArguments() {
+        return List.of("source", "start", "end");
     }
 
     @Override
     public StatementResult run(Scope scope) throws NativeFunctionException {
         Variable sourceVar = scope.get("source");
-        StringObj sourceObj = (StringObj) sourceVar.getValue();
-        String source = sourceObj.getValue();
+        String source = (String) sourceVar.getValue();
 
         Variable startVar = scope.get("start");
-        NumberObj startObj = (NumberObj) startVar.getValue();
-        double start = startObj.getValue();
+        double start = (Double) startVar.getValue();
 
         Variable endVar = scope.get("end");
-        NumberObj endValue = (NumberObj) endVar.getValue();
-        double end = endValue.getValue();
+        double end = (Double) endVar.getValue();
 
         if (start < 0 || end >= source.length()) {
             throw new NativeFunctionException("INDEX_OUT_OF_BOUNDS_EXCEPTION", "Index out of bounds");
@@ -49,8 +33,6 @@ public class StringSubString implements NativeFunction {
 
         String result = source.substring((int) start, (int) end + 1);
 
-        StringObj returnObj = new StringObj(result);
-
-        return new ReturnStatementResult(returnObj);
+        return new ReturnStatementResult(result);
     }
 }

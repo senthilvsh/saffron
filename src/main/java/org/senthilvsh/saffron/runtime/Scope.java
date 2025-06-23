@@ -1,4 +1,4 @@
-package org.senthilvsh.saffron.common;
+package org.senthilvsh.saffron.runtime;
 
 import java.util.HashMap;
 

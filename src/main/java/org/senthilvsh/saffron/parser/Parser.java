@@ -1,7 +1,6 @@
 package org.senthilvsh.saffron.parser;
 
 import org.senthilvsh.saffron.ast.*;
-import org.senthilvsh.saffron.common.Type;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,14 +86,12 @@ public class Parser {
 
         consume(TokenType.SYMBOL, new String[]{"("});
 
-        List<FunctionArgument> arguments = new ArrayList<>();
+        List<String> arguments = new ArrayList<>();
 
         assertLookAheadNotNull();
         while (!lookahead.getValue().equals(")")) {
             Token argName = consume(IDENTIFIER);
-            consume(SYMBOL, new String[]{":"});
-            Token type = consume(KEYWORD, new String[]{"num", "str", "bool"});
-            arguments.add(new FunctionArgument(argName.getValue(), Type.of(type.getValue())));
+            arguments.add(argName.getValue());
             if (!lookahead.getValue().equals(",")) {
                 break;
             }
@@ -102,8 +99,6 @@ public class Parser {
         }
 
         consume(TokenType.SYMBOL, new String[]{")"});
-        consume(TokenType.SYMBOL, new String[]{":"});
-        Token returnType = consume(KEYWORD, new String[]{"void", "num", "str", "bool"});
 
         Statement body = blockStatement();
 
@@ -111,7 +106,6 @@ public class Parser {
                 functionName.getValue(),
                 arguments,
                 (BlockStatement) body,
-                Type.of(returnType.getValue()),
                 funKeyword.getPosition(), body.getPosition() + body.getLength() - funKeyword.getPosition(),
                 functionName.getPosition(),
                 functionName.getLength()
@@ -121,8 +115,6 @@ public class Parser {
     Statement variableDeclarationStatement() throws ParseError {
         Token varKeyword = consume(TokenType.KEYWORD, new String[]{"var"});
         Token variableName = consume(TokenType.IDENTIFIER);
-        consume(TokenType.SYMBOL, new String[]{":"});
-        Token typeSpecifier = consume(TokenType.KEYWORD, new String[]{"num", "str", "bool"});
 
         Expression expression = null;
 
@@ -137,7 +129,6 @@ public class Parser {
 
         return new VariableDeclaration(
                 variableName.getValue(),
-                typeSpecifier.getValue(),
                 expression,
                 varKeyword.getPosition(),
                 semicolon.getPosition() + semicolon.getLength() - varKeyword.getPosition()
@@ -224,26 +215,14 @@ public class Parser {
         consume(KEYWORD, new String[]{"catch"});
         consume(SYMBOL, new String[]{"("});
         Token typeArgName = consume(IDENTIFIER);
-        consume(SYMBOL, new String[]{":"});
-        Token typeArgType = consume(KEYWORD);
         consume(SYMBOL, new String[]{","});
         Token msgArgName = consume(IDENTIFIER);
-        consume(SYMBOL, new String[]{":"});
-        Token msgArgType = consume(KEYWORD);
         consume(SYMBOL, new String[]{")"});
         Statement catchBlock = blockStatement();
         return new TryCatchStatement(
                 tryBlock,
-                new CatchBlockArgument(
-                        typeArgName.getValue(),
-                        Type.of(typeArgType.getValue()),
-                        typeArgName.getPosition(),
-                        typeArgType.getPosition() + typeArgType.getLength() - typeArgName.getPosition()),
-                new CatchBlockArgument(
-                        msgArgName.getValue(),
-                        Type.of(msgArgType.getValue()),
-                        msgArgName.getPosition(),
-                        msgArgType.getPosition() + msgArgType.getLength() - msgArgName.getPosition()),
+                typeArgName.getValue(),
+                msgArgName.getValue(),
                 catchBlock,
                 tryKeyword.getPosition(),
                 catchBlock.getPosition() + catchBlock.getLength() - tryKeyword.getPosition()

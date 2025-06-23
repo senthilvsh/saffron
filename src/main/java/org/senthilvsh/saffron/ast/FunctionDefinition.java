@@ -1,25 +1,20 @@
 package org.senthilvsh.saffron.ast;
 
-import org.senthilvsh.saffron.common.Type;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FunctionDefinition extends Statement {
     private final String name;
-    private final List<FunctionArgument> arguments;
+    private final List<String> arguments;
     private final BlockStatement body;
-    private final Type returnType;
     private final int namePosition;
     private final int nameLength;
 
-    public FunctionDefinition(String name, List<FunctionArgument> arguments, BlockStatement body, Type returnType,
+    public FunctionDefinition(String name, List<String> arguments, BlockStatement body,
                               int position, int length, int namePosition, int nameLength) {
         super(position, length);
         this.name = name;
         this.arguments = arguments;
         this.body = body;
-        this.returnType = returnType;
         this.namePosition = namePosition;
         this.nameLength = nameLength;
     }
@@ -28,16 +23,12 @@ public class FunctionDefinition extends Statement {
         return name;
     }
 
-    public List<FunctionArgument> getArguments() {
+    public List<String> getArguments() {
         return arguments;
     }
 
     public BlockStatement getBody() {
         return body;
-    }
-
-    public Type getReturnType() {
-        return returnType;
     }
 
     public int getNamePosition() {
@@ -46,13 +37,5 @@ public class FunctionDefinition extends Statement {
 
     public int getNameLength() {
         return nameLength;
-    }
-
-    public String getSignature() {
-        String signature = name;
-        if (arguments != null && !arguments.isEmpty()) {
-            signature += "_" + arguments.stream().map(a -> a.getType().getName().toLowerCase()).collect(Collectors.joining("_"));
-        }
-        return signature;
     }
 }
