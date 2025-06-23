@@ -4,6 +4,10 @@ body {
     overflow: auto;
 }
 
+header {
+    text-align: center;
+}
+
 pre {
     padding: 15px;
     border: solid 1px #aaa;
@@ -16,9 +20,8 @@ code {
     line-height: 1.5em;
 }
 
-.navigation {
+nav {
     padding: 15px;
-    text-align: center;
 }
 
 footer {
