@@ -2,11 +2,11 @@ package org.senthilvsh.saffron.ast;
 
 public class TryCatchStatement extends Statement {
     private final Statement tryBlock;
-    private final CatchBlockArgument exceptionType;
-    private final CatchBlockArgument exceptionMessage;
+    private final String exceptionType;
+    private final String exceptionMessage;
     private final Statement catchBlock;
 
-    public TryCatchStatement(Statement tryBlock, CatchBlockArgument exceptionType, CatchBlockArgument exceptionMessage,
+    public TryCatchStatement(Statement tryBlock, String exceptionType, String exceptionMessage,
                              Statement catchBlock, int position, int length) {
         super(position, length);
         this.tryBlock = tryBlock;
@@ -19,11 +19,11 @@ public class TryCatchStatement extends Statement {
         return tryBlock;
     }
 
-    public CatchBlockArgument getExceptionType() {
+    public String getExceptionType() {
         return exceptionType;
     }
 
-    public CatchBlockArgument getExceptionMessage() {
+    public String getExceptionMessage() {
         return exceptionMessage;
     }
 

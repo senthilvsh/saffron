@@ -1,14 +1,14 @@
 package org.senthilvsh.saffron.runtime;
 
 public class ReturnStatementResult extends StatementResult {
-    private final BaseObj returnValue;
+    private final Object returnValue;
 
-    public ReturnStatementResult(BaseObj returnValue) {
+    public ReturnStatementResult(Object returnValue) {
         super(StatementResultType.RETURN);
         this.returnValue = returnValue;
     }
 
-    public BaseObj getReturnValue() {
+    public Object getReturnValue() {
         return returnValue;
     }
 }

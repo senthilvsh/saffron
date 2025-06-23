@@ -1,12 +1,9 @@
 package org.senthilvsh.saffron;
 
 import org.senthilvsh.saffron.ast.Program;
-import org.senthilvsh.saffron.common.SaffronException;
+import org.senthilvsh.saffron.runtime.SaffronException;
 import org.senthilvsh.saffron.parser.Parser;
 import org.senthilvsh.saffron.runtime.Interpreter;
-import org.senthilvsh.saffron.runtime.RuntimeError;
-import org.senthilvsh.saffron.validate.ValidationError;
-import org.senthilvsh.saffron.validate.Validator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,7 +47,6 @@ public class Main {
 
         try {
             Program program = new Parser(source).parse();
-            new Validator().validate(program);
             new Interpreter().execute(program);
         } catch (SaffronException e) {
             printError(e, source);
@@ -60,12 +56,7 @@ public class Main {
     private static void printError(SaffronException e, String source) {
         int position = e.getPosition();
         int length = e.getLength();
-        String message = e.getMessage();
-        if (e instanceof ValidationError) {
-            message = "Validation Error: " + message;
-        } else if (e instanceof RuntimeError) {
-            message = "Runtime Error: " + message;
-        }
+        String message = "Runtime Error: " + e.getMessage();
         System.err.println(message + "\n");
         LineInfo lineInfo = getLine(source, position);
         if (lineInfo != null) {

@@ -1,0 +1,8 @@
+Do regression testing after converting to dynamic typing
+Fix null-related warnings in Interpreter
+Provide private memory for native functions
+Implement file_close function
+Implement file_read function
+Implement file_open function
+Implement ascii_code function
+Implement ascii_char function

@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Saffron is a simple, type-safe, general-purpose programming language.
+Saffron is a general-purpose programming language with dynamic typing.
 
 The language provides a few basic data types (Number, String and Boolean) and 
 simple programming constructs like conditional statements, loops and functions.

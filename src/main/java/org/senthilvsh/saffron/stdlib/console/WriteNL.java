@@ -1,31 +1,27 @@
-package org.senthilvsh.saffron.stdlib.conversion;
+package org.senthilvsh.saffron.stdlib.console;
 
 import org.senthilvsh.saffron.runtime.ReturnStatementResult;
 import org.senthilvsh.saffron.runtime.Scope;
 import org.senthilvsh.saffron.runtime.StatementResult;
-import org.senthilvsh.saffron.runtime.Variable;
 import org.senthilvsh.saffron.stdlib.NativeFunction;
 
 import java.util.List;
 
-public class BooleanToString implements NativeFunction {
+public class WriteNL implements NativeFunction {
     @Override
     public String getName() {
-        return "to_str";
+        return "writeln";
     }
 
     @Override
     public List<String> getArguments() {
-        return List.of("source");
+        return List.of("value");
     }
 
     @Override
     public StatementResult run(Scope scope) {
-        Variable sourceVar = scope.get("source");
-        boolean source = (Boolean) sourceVar.getValue();
-
-        String result = String.valueOf(source);
-
-        return new ReturnStatementResult(result);
+        Object baseObj = scope.get("value").getValue();
+        System.out.println(baseObj.toString());
+        return new ReturnStatementResult(null);
     }
 }
